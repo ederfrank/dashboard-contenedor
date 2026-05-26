@@ -267,7 +267,7 @@
                         <option ${item.estado=='Liberado'?'selected':''}>Liberado</option>
                         <option ${item.estado=='Entregado'?'selected':''}>Entregado</option>
                     </select></td>
-                    <td><input type="number" value="${item.fob}" onchange="cambiar(${item.id}, 'fob', Number(this.value))"></td>
+                    <td><input type="text" value="${formatNumber(item.fob)}" onchange="cambiar(${item.id}, 'fob', parseFloat(this.value.replace(/,/g, '')) || 0)" onfocus="this.value=${item.fob}" onblur="this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
                     <td><input type="number" value="${item.aduana}" onchange="cambiar(${item.id}, 'aduana', Number(this.value))"></td>
                     <td><input type="number" value="${item.naviera}" onchange="cambiar(${item.id}, 'naviera', Number(this.value))"></td>
                     <td><input type="number" value="${item.almacen}" onchange="cambiar(${item.id}, 'almacen', Number(this.value))"></td>
