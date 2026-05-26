@@ -6,256 +6,232 @@
     <title>Dashboard de Contenedores</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; padding: 20px;
-        }
-        .dashboard {
-            max-width: 1500px; margin: 0 auto; background: white;
-            border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; padding: 25px 30px; text-align: center;
-        }
-        .header h1 { font-size: 2em; margin-bottom: 5px; }
-        .header p { opacity: 0.9; font-size: 0.95em; }
-        .content { padding: 30px; }
-        .toolbar {
-            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px;
-            align-items: center;
-        }
-        .section-title {
-            font-size: 1.3em; font-weight: 600; color: #333;
-            margin: 20px 0 15px 0; padding-bottom: 10px;
-            border-bottom: 3px solid #667eea; display: inline-block;
-        }
-        .table-wrapper {
-            overflow-x: auto; background: white;
-            border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 0.9em; }
-        th { font-weight: 600; font-size: 0.85em; letter-spacing: 0.5px; }
-        tbody tr:hover { background-color: #f5f7ff; }
-        input, select {
-            width: 100%; padding: 7px 10px;
-            border: 2px solid #e0e0e0; border-radius: 6px;
-            font-size: 0.85em; transition: all 0.3s;
-        }
-        input:focus, select:focus {
-            outline: none; border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-        }
-        .btn {
-            background: #667eea; color: white; border: none;
-            padding: 10px 18px; border-radius: 8px; cursor: pointer;
-            font-size: 0.9em; transition: all 0.3s; white-space: nowrap;
-        }
-        .btn:hover { background: #764ba2; transform: translateY(-1px); }
-        .btn-success { background: #4CAF50; }
-        .btn-success:hover { background: #45a049; }
-        .btn-warning { background: #ff9800; }
-        .btn-warning:hover { background: #f57c00; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; padding: 20px; }
+        .dashboard { max-width: 100%; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; text-align: center; }
+        h1 { font-size: 2em; margin-bottom: 10px; }
+        .content { padding: 30px; overflow-x: auto; }
+        .section-title { font-size: 1.3em; font-weight: 600; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; min-width: 1600px; }
+        thead { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        th, td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #ddd; font-size: 13px; }
+        th { font-weight: 600; }
+        input, select { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; text-align: center; }
+        .btn { background: #667eea; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin: 5px; font-size: 13px; }
+        .btn:hover { background: #764ba2; }
         .btn-danger { background: #ff6b6b; }
         .btn-danger:hover { background: #ee5a52; }
-        .btn-info { background: #2196F3; }
-        .btn-info:hover { background: #1976D2; }
-        .summary-section {
-            background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
-            padding: 25px; border-radius: 12px; margin: 30px 0;
-        }
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px; margin-top: 15px;
-        }
-        .summary-item {
-            background: white; padding: 18px;
-            border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .summary-label { font-size: 0.85em; color: #666; margin-bottom: 8px; }
-        .summary-value { font-size: 1.6em; font-weight: bold; color: #333; }
-        .total-highlight {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
-        }
-        .total-highlight .summary-label, .total-highlight .summary-value { color: white; }
-        .counter {
-            display: inline-block; background: #667eea; color: white;
-            padding: 5px 12px; border-radius: 20px; font-size: 0.85em;
-            margin-left: 10px;
-        }
-        #fileInput { display: none; }
-        .notification {
-            position: fixed; top: 20px; right: 20px;
-            padding: 15px 20px; border-radius: 8px; color: white;
-            z-index: 1000; animation: slideIn 0.3s ease;
-            font-weight: 500;
-        }
-        .notification-success { background: #4CAF50; }
-        .notification-error { background: #f44336; }
-        .notification-info { background: #2196F3; }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @media (max-width: 768px) {
-            .content { padding: 15px; }
-            .summary-grid { grid-template-columns: 1fr 1fr; }
-            .toolbar { flex-direction: column; align-items: stretch; }
-        }
+        .btn-success { background: #4CAF50; }
+        .btn-success:hover { background: #45a049; }
+        .spacer { background: #f0f0f0; width: 30px; }
+        .totals-section { background: linear-gradient(135deg, #f8f9ff, #f0f2ff); padding: 25px; border-radius: 12px; margin: 20px 0; }
+        .totals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .total-box { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .total-box h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
+        .total-box .amount { font-size: 28px; font-weight: bold; color: #333; }
+        .total-highlight { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .total-highlight h3, .total-highlight .amount { color: white; }
+        .row-total { font-weight: bold; background: #f9f9f9; }
+        .actions { text-align: center; margin-top: 20px; }
+        @media (max-width: 768px) { .totals-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
     <div class="dashboard">
         <div class="header">
-            <h1>🚢 Dashboard de Contenedores</h1>
-            <p>Control de Gastos de Importación - FOB · Aduana · Naviera · Almacén · Poggi</p>
+            <h1>🚢 Dashboard de Contenedores - En Soles</h1>
+            <p>Control de Gastos de Importación - FOB, Aduana, Naviera, Almacén, Poggi</p>
         </div>
-        
         <div class="content">
-            <!-- BARRA DE HERRAMIENTAS -->
-            <div class="toolbar">
-                <button class="btn" onclick="agregarFila()">➕ Agregar Contenedor</button>
-                <button class="btn btn-info" onclick="document.getElementById('fileInput').click()">
-                    📥 Importar CSV
-                </button>
-                <input type="file" id="fileInput" accept=".csv" onchange="importarCSV(event)">
-                <button class="btn btn-warning" onclick="exportarCSV()">📤 Exportar CSV</button>
-                <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar Excel</button>
-                <button class="btn btn-danger" onclick="limpiarTodo()">🗑️ Limpiar Todo</button>
-                <span class="counter" id="contador">0 contenedores</span>
-            </div>
+            <div class="section-title">📋 Registro de Contenedores</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>N° Contenedor</th>
+                        <th>Fecha Llegada</th>
+                        <th>Estado</th>
+                        <th>FOB (S/)</th>
+                        <th>Aduana (S/)</th>
+                        <th>Naviera (S/)</th>
+                        <th>Almacén (S/)</th>
+                        <th>Poggi (S/)</th>
+                        <th>Total (S/)</th>
+                        <th class="spacer"></th>
+                        <th>FOB TOTAL (S/)</th>
+                        <th>IMPUESTOS (S/)</th>
+                        <th>GASTOS (S/)</th>
+                        <th>TOTAL GENERAL (S/)</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyTable"></tbody>
+            </table>
             
-            <!-- TABLA -->
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>N°</th>
-                            <th>N° Contenedor</th>
-                            <th>Fecha Llegada</th>
-                            <th>Estado</th>
-                            <th>FOB ($)</th>
-                            <th>Aduana ($)</th>
-                            <th>Naviera ($)</th>
-                            <th>Almacén ($)</th>
-                            <th>Poggi ($)</th>
-                            <th>Total ($)</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaBody">
-                        <tr><td colspan="11" style="text-align:center;padding:40px;color:#999;">
-                            No hay contenedores. ¡Agrega uno o importa un CSV!
-                        </td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <button class="btn" onclick="addRow()">➕ Agregar Contenedor</button>
+            <button class="btn btn-success" onclick="resetData()">🔄 Recargar 45 Contenedores</button>
             
-            <!-- RESUMEN FINANCIERO -->
-            <div class="summary-section">
-                <div class="section-title" style="margin-top:0;">💰 Resumen Financiero</div>
-                <div class="summary-grid">
-                    <div class="summary-item">
-                        <div class="summary-label">FOB (Inicial)</div>
-                        <div class="summary-value" id="totFOB">$0</div>
+            <div class="totals-section">
+                <div class="section-title" style="margin-top:0;">💰 Resumen General en Soles</div>
+                <div class="totals-grid">
+                    <div class="total-box">
+                        <h3>FOB TOTAL</h3>
+                        <div class="amount" id="granFOB">S/ 0</div>
                     </div>
-                    <div class="summary-item">
-                        <div class="summary-label">Impuestos (Aduana)</div>
-                        <div class="summary-value" id="totAduana">$0</div>
+                    <div class="total-box">
+                        <h3>IMPUESTOS<br>(Aduana)</h3>
+                        <div class="amount" id="granImpuestos">S/ 0</div>
                     </div>
-                    <div class="summary-item">
-                        <div class="summary-label">Gastos</div>
-                        <div class="summary-value" id="totGastos">$0</div>
+                    <div class="total-box">
+                        <h3>GASTOS<br>(Naviera+Almacén+Poggi)</h3>
+                        <div class="amount" id="granGastos">S/ 0</div>
                     </div>
-                    <div class="summary-item total-highlight">
-                        <div class="summary-label">TOTAL GENERAL</div>
-                        <div class="summary-value" id="totGeneral">$0</div>
+                    <div class="total-box total-highlight">
+                        <h3>TOTAL GENERAL</h3>
+                        <div class="amount" id="granTotal">S/ 0</div>
                     </div>
                 </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn" onclick="exportar()">📊 Exportar a Excel</button>
+                <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ===== DATOS =====
-        let contenedores = JSON.parse(localStorage.getItem('contenedores_data')) || [];
-        let nextId = contenedores.length > 0 ? Math.max(...contenedores.map(c => c.id)) + 1 : 1;
+        // Datos iniciales de los 45 contenedores
+        const datosIniciales = [
+            {id:1, cont:'643', fecha:'', estado:'Entregado', fob:70380, aduana:25365.5, naviera:2725.5, almacen:3105, poggi:7360},
+            {id:2, cont:'644', fecha:'', estado:'Entregado', fob:63048.75, aduana:17517, naviera:2725.5, almacen:3105, poggi:7360},
+            {id:3, cont:'648', fecha:'', estado:'Entregado', fob:52540.05, aduana:13278, naviera:2777.25, almacen:3105, poggi:7360},
+            {id:4, cont:'653', fecha:'', estado:'Entregado', fob:83117.4, aduana:40825.3, naviera:2777.25, almacen:3105, poggi:7400},
+            {id:5, cont:'654', fecha:'2026-04-19', estado:'Entregado', fob:69495.075, aduana:28381.9, naviera:3018.75, almacen:3277.5, poggi:7400},
+            {id:6, cont:'655', fecha:'2026-04-19', estado:'Entregado', fob:60116.25, aduana:15206, naviera:3018.75, almacen:3277.5, poggi:7400},
+            {id:7, cont:'656', fecha:'2026-04-18', estado:'Entregado', fob:68917.2, aduana:26760.55, naviera:3001.5, almacen:3277.5, poggi:7400},
+            {id:8, cont:'657', fecha:'2026-04-18', estado:'Entregado', fob:69888.375, aduana:34834.55, naviera:3001.5, almacen:3277.5, poggi:7400},
+            {id:9, cont:'658', fecha:'2026-04-18', estado:'Entregado', fob:68223.75, aduana:20817.5, naviera:3001.5, almacen:3277.5, poggi:7400},
+            {id:10, cont:'659', fecha:'2026-04-20', estado:'Entregado', fob:51536.1, aduana:15271.5, naviera:2777.25, almacen:4140, poggi:7490},
+            {id:11, cont:'660', fecha:'2026-04-17', estado:'Entregado', fob:43211.25, aduana:14767.96, naviera:2777.25, almacen:3105, poggi:7400},
+            {id:12, cont:'661', fecha:'2026-04-17', estado:'Entregado', fob:51434.325, aduana:17297.04, naviera:2777.25, almacen:3105, poggi:7400},
+            {id:13, cont:'662', fecha:'2026-04-26', estado:'Entregado', fob:47748, aduana:17177.5, naviera:2777.25, almacen:3381, poggi:7450},
+            {id:14, cont:'663', fecha:'2026-05-07', estado:'Entregado', fob:66869.5905, aduana:21802.5, naviera:2777.25, almacen:3381, poggi:7450},
+            {id:15, cont:'664', fecha:'2026-05-01', estado:'Entregado', fob:68917.2, aduana:20452.32, naviera:2777.25, almacen:3795, poggi:7450},
+            {id:16, cont:'665', fecha:'2026-05-01', estado:'Entregado', fob:65511.5325, aduana:18612.5, naviera:2777.25, almacen:3381, poggi:7450},
+            {id:17, cont:'666', fecha:'2026-05-01', estado:'Entregado', fob:70380, aduana:25340.15, naviera:2777.25, almacen:3484.5, poggi:7450},
+            {id:18, cont:'667', fecha:'2026-05-01', estado:'Entregado', fob:70281.675, aduana:29127.31, naviera:2777.25, almacen:3795, poggi:7450},
+            {id:19, cont:'668', fecha:'2026-05-01', estado:'Entregado', fob:51756.21, aduana:24691, naviera:2777.25, almacen:3381, poggi:7450},
+            {id:20, cont:'669', fecha:'2026-05-01', estado:'Entregado', fob:45540, aduana:12118, naviera:2777.25, almacen:3381, poggi:7450},
+            {id:21, cont:'670', fecha:'2026-05-01', estado:'Entregado', fob:38036.25, aduana:14846, naviera:2777.25, almacen:3381, poggi:7450},
+            {id:22, cont:'671', fecha:'2026-05-13', estado:'Entregado', fob:50469.5325, aduana:15820.07, naviera:2518.5, almacen:3381, poggi:7450},
+            {id:23, cont:'672', fecha:'2026-05-13', estado:'En aduana', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:24, cont:'673', fecha:'2026-05-18', estado:'En aduana', fob:54458.25, aduana:18780.52, naviera:2863.5, almacen:3415.5, poggi:7450},
+            {id:25, cont:'674', fecha:'2026-05-18', estado:'En aduana', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:26, cont:'675', fecha:'2026-05-18', estado:'Entregado', fob:43780.5, aduana:16443.96, naviera:2863.5, almacen:3105, poggi:7450},
+            {id:27, cont:'676', fecha:'2026-05-18', estado:'En aduana', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:28, cont:'677', fecha:'2026-05-17', estado:'En aduana', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:29, cont:'678', fecha:'2026-05-17', estado:'Entregado', fob:54251.25, aduana:26251.5, naviera:2725.5, almacen:2863.5, poggi:7450},
+            {id:30, cont:'679', fecha:'2026-05-20', estado:'En aduana', fob:27317.1, aduana:10700.18, naviera:2584.05, almacen:3105, poggi:7410},
+            {id:31, cont:'681', fecha:'2026-05-18', estado:'En aduana', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:32, cont:'682', fecha:'2026-05-18', estado:'En aduana', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:33, cont:'687', fecha:'2026-06-14', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:34, cont:'688', fecha:'2026-06-04', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:35, cont:'689', fecha:'2026-06-04', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:36, cont:'690', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:37, cont:'691', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:38, cont:'692', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:39, cont:'693', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:40, cont:'694', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:41, cont:'695', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:42, cont:'696', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:43, cont:'697', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:44, cont:'698', fecha:'2026-07-06', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
+            {id:45, cont:'699', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0}
+        ];
         
-        // ===== GUARDAR EN LOCALSTORAGE =====
+        let items = JSON.parse(localStorage.getItem('misdatos')) || [...datosIniciales];
+        
         function guardar() {
-            localStorage.setItem('contenedores_data', JSON.stringify(contenedores));
+            localStorage.setItem('misdatos', JSON.stringify(items));
         }
         
-        // ===== NOTIFICACIONES =====
-        function notificar(mensaje, tipo) {
-            const n = document.createElement('div');
-            n.className = `notification notification-${tipo}`;
-            n.textContent = mensaje;
-            document.body.appendChild(n);
-            setTimeout(() => n.remove(), 3000);
-        }
-        
-        // ===== RENDERIZAR TABLA =====
-        function renderizar() {
-            const tbody = document.getElementById('tablaBody');
-            document.getElementById('contador').textContent = `${contenedores.length} contenedores`;
-            
-            if (contenedores.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#999;">No hay contenedores. ¡Agrega uno o importa un CSV!</td></tr>';
-                actualizarTotales();
-                return;
-            }
-            
-            tbody.innerHTML = contenedores.map((c, i) => {
-                const total = (c.fob || 0) + (c.aduana || 0) + (c.naviera || 0) + (c.almacen || 0) + (c.poggi || 0);
-                return `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td><input type="text" value="${c.contenedor || ''}" onchange="actualizarCampo(${c.id}, 'contenedor', this.value)" placeholder="N° contenedor"></td>
-                    <td><input type="date" value="${c.fecha || ''}" onchange="actualizarCampo(${c.id}, 'fecha', this.value)"></td>
-                    <td>
-                        <select onchange="actualizarCampo(${c.id}, 'estado', this.value)">
-                            <option value="">Seleccionar</option>
-                            ${['En tránsito','En aduana','Liberado','Entregado','Con incidencia'].map(e => 
-                                `<option value="${e}" ${c.estado === e ? 'selected' : ''}>${e}</option>`
-                            ).join('')}
-                        </select>
-                    </td>
-                    <td><input type="number" step="0.01" value="${c.fob || 0}" onchange="actualizarCampo(${c.id}, 'fob', parseFloat(this.value) || 0)"></td>
-                    <td><input type="number" step="0.01" value="${c.aduana || 0}" onchange="actualizarCampo(${c.id}, 'aduana', parseFloat(this.value) || 0)"></td>
-                    <td><input type="number" step="0.01" value="${c.naviera || 0}" onchange="actualizarCampo(${c.id}, 'naviera', parseFloat(this.value) || 0)"></td>
-                    <td><input type="number" step="0.01" value="${c.almacen || 0}" onchange="actualizarCampo(${c.id}, 'almacen', parseFloat(this.value) || 0)"></td>
-                    <td><input type="number" step="0.01" value="${c.poggi || 0}" onchange="actualizarCampo(${c.id}, 'poggi', parseFloat(this.value) || 0)"></td>
-                    <td style="font-weight:bold;">$${total.toFixed(2)}</td>
-                    <td><button class="btn btn-danger" onclick="eliminar(${c.id})" style="padding:5px 10px;">🗑️</button></td>
-                </tr>`;
-            }).join('');
-            
-            actualizarTotales();
-        }
-        
-        // ===== ACTUALIZAR CAMPO =====
-        function actualizarCampo(id, campo, valor) {
-            const c = contenedores.find(x => x.id === id);
-            if (c) {
-                c[campo] = valor;
+        function resetData() {
+            if (confirm('¿Recargar los 45 contenedores originales? Se perderán los cambios.')) {
+                items = [...datosIniciales];
                 guardar();
-                renderizar();
+                mostrar();
             }
         }
         
-        // ===== AGREGAR FILA =====
-        function agregarFila() {
-            contenedores.push({
-                id: nextId++,
-                contenedor: '',
+        function formatSoles(valor) {
+            return 'S/ ' + valor.toFixed(2);
+        }
+        
+        function mostrar() {
+            let html = '';
+            let totalFOB = 0, totalAduana = 0, totalNaviera = 0, totalAlmacen = 0, totalPoggi = 0;
+            
+            items.forEach((item, i) => {
+                let totalFila = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
+                let impuestos = item.aduana;
+                let gastos = item.naviera + item.almacen + item.poggi;
+                let totalGeneral = item.fob + impuestos + gastos;
+                
+                totalFOB += item.fob;
+                totalAduana += item.aduana;
+                totalNaviera += item.naviera;
+                totalAlmacen += item.almacen;
+                totalPoggi += item.poggi;
+                
+                html += `<tr>
+                    <td>${i+1}</td>
+                    <td><input value="${item.cont}" onchange="cambiar(${item.id}, 'cont', this.value)"></td>
+                    <td><input type="date" value="${item.fecha}" onchange="cambiar(${item.id}, 'fecha', this.value)"></td>
+                    <td><select onchange="cambiar(${item.id}, 'estado', this.value)">
+                        <option ${item.estado=='En tránsito'?'selected':''}>En tránsito</option>
+                        <option ${item.estado=='En aduana'?'selected':''}>En aduana</option>
+                        <option ${item.estado=='Liberado'?'selected':''}>Liberado</option>
+                        <option ${item.estado=='Entregado'?'selected':''}>Entregado</option>
+                    </select></td>
+                    <td><input type="number" value="${item.fob}" onchange="cambiar(${item.id}, 'fob', Number(this.value))"></td>
+                    <td><input type="number" value="${item.aduana}" onchange="cambiar(${item.id}, 'aduana', Number(this.value))"></td>
+                    <td><input type="number" value="${item.naviera}" onchange="cambiar(${item.id}, 'naviera', Number(this.value))"></td>
+                    <td><input type="number" value="${item.almacen}" onchange="cambiar(${item.id}, 'almacen', Number(this.value))"></td>
+                    <td><input type="number" value="${item.poggi}" onchange="cambiar(${item.id}, 'poggi', Number(this.value))"></td>
+                    <td class="row-total">${formatSoles(totalFila)}</td>
+                    <td class="spacer"></td>
+                    <td class="row-total">${formatSoles(item.fob)}</td>
+                    <td class="row-total">${formatSoles(impuestos)}</td>
+                    <td class="row-total">${formatSoles(gastos)}</td>
+                    <td class="row-total">${formatSoles(totalGeneral)}</td>
+                    <td><button class="btn btn-danger" onclick="borrar(${item.id})">🗑️</button></td>
+                </tr>`;
+            });
+            
+            document.getElementById('bodyTable').innerHTML = html;
+            
+            let granGastos = totalNaviera + totalAlmacen + totalPoggi;
+            let granTotal = totalFOB + totalAduana + granGastos;
+            
+            document.getElementById('granFOB').textContent = formatSoles(totalFOB);
+            document.getElementById('granImpuestos').textContent = formatSoles(totalAduana);
+            document.getElementById('granGastos').textContent = formatSoles(granGastos);
+            document.getElementById('granTotal').textContent = formatSoles(granTotal);
+        }
+        
+        function cambiar(id, campo, valor) {
+            let item = items.find(i => i.id === id);
+            item[campo] = valor;
+            guardar();
+            mostrar();
+        }
+        
+        function addRow() {
+            let maxId = items.length > 0 ? Math.max(...items.map(i => i.id)) : 0;
+            items.push({
+                id: maxId + 1,
+                cont: '',
                 fecha: '',
                 estado: 'En tránsito',
                 fob: 0,
@@ -265,174 +241,34 @@
                 poggi: 0
             });
             guardar();
-            renderizar();
-            notificar('✅ Contenedor agregado', 'success');
+            mostrar();
         }
         
-        // ===== ELIMINAR =====
-        function eliminar(id) {
+        function borrar(id) {
             if (confirm('¿Eliminar este contenedor?')) {
-                contenedores = contenedores.filter(c => c.id !== id);
+                items = items.filter(i => i.id !== id);
                 guardar();
-                renderizar();
-                notificar('🗑️ Contenedor eliminado', 'info');
+                mostrar();
             }
         }
         
-        // ===== LIMPIAR TODO =====
-        function limpiarTodo() {
-            if (confirm('⚠️ ¿Eliminar TODOS los contenedores? Esta acción no se puede deshacer.')) {
-                contenedores = [];
-                nextId = 1;
-                guardar();
-                renderizar();
-                notificar('🗑️ Todos los contenedores eliminados', 'info');
-            }
-        }
-        
-        // ===== IMPORTAR CSV =====
-        function importarCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const texto = e.target.result;
-                    const lineas = texto.split('\n').filter(linea => linea.trim() !== '');
-                    
-                    if (lineas.length < 2) {
-                        notificar('❌ El archivo CSV está vacío o solo tiene encabezados', 'error');
-                        return;
-                    }
-                    
-                    // Detectar encabezados
-                    const encabezados = lineas[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
-                    
-                    // Mapear columnas - AHORA INCLUYE "N° CONTENEDOR"
-                    const mapaColumnas = {
-                        'contenedor': ['n° contenedor', 'n°contenedor', 'numero contenedor', 'contenedor', 'container', 'n°'],
-                        'fecha': ['fecha llegada', 'fecha', 'fecha_llegada', 'date'],
-                        'estado': ['estado', 'status', 'state'],
-                        'fob': ['fob', 'fob ($)'],
-                        'aduana': ['aduana', 'aduana ($)', 'customs'],
-                        'naviera': ['naviera', 'naviera ($)', 'shipping'],
-                        'almacen': ['almacen', 'almacén', 'almacén ($)', 'warehouse'],
-                        'poggi': ['poggi', 'poggi ($)']
-                    };
-                    
-                    // Encontrar índices
-                    const indices = {};
-                    for (const [campo, opciones] of Object.entries(mapaColumnas)) {
-                        for (const opcion of opciones) {
-                            const idx = encabezados.findIndex(h => h.includes(opcion));
-                            if (idx !== -1) {
-                                indices[campo] = idx;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // Validar columnas mínimas
-                    if (indices['contenedor'] === undefined) {
-                        notificar('❌ No se encontró la columna "N° Contenedor" en el CSV. Encabezados encontrados: ' + encabezados.join(', '), 'error');
-                        return;
-                    }
-                    
-                    let importados = 0;
-                    const nuevos = [];
-                    
-                    for (let i = 1; i < lineas.length; i++) {
-                        const columnas = lineas[i].split(',').map(c => c.trim().replace(/"/g, ''));
-                        if (columnas.length < 2) continue;
-                        
-                        const nuevo = {
-                            id: nextId++,
-                            contenedor: columnas[indices['contenedor']] || '',
-                            fecha: indices['fecha'] !== undefined ? (columnas[indices['fecha']] || '') : '',
-                            estado: indices['estado'] !== undefined ? (columnas[indices['estado']] || 'En tránsito') : 'En tránsito',
-                            fob: indices['fob'] !== undefined ? (parseFloat(columnas[indices['fob']]) || 0) : 0,
-                            aduana: indices['aduana'] !== undefined ? (parseFloat(columnas[indices['aduana']]) || 0) : 0,
-                            naviera: indices['naviera'] !== undefined ? (parseFloat(columnas[indices['naviera']]) || 0) : 0,
-                            almacen: indices['almacen'] !== undefined ? (parseFloat(columnas[indices['almacen']]) || 0) : 0,
-                            poggi: indices['poggi'] !== undefined ? (parseFloat(columnas[indices['poggi']]) || 0) : 0
-                        };
-                        
-                        if (nuevo.contenedor) {
-                            nuevos.push(nuevo);
-                            importados++;
-                        }
-                    }
-                    
-                    if (importados === 0) {
-                        notificar('⚠️ No se encontraron contenedores válidos en el archivo', 'error');
-                        return;
-                    }
-                    
-                    contenedores = [...contenedores, ...nuevos];
-                    guardar();
-                    renderizar();
-                    notificar(`✅ ${importados} contenedores importados exitosamente`, 'success');
-                    
-                } catch (error) {
-                    console.error(error);
-                    notificar('❌ Error al procesar el archivo CSV: ' + error.message, 'error');
-                }
-            };
-            
-            reader.readAsText(file, 'UTF-8');
-            event.target.value = '';
-        }
-        
-        // ===== EXPORTAR CSV =====
-        function exportarCSV() {
-            if (contenedores.length === 0) {
-                notificar('⚠️ No hay contenedores para exportar', 'error');
-                return;
-            }
-            
-            let csv = 'N°,N° Contenedor,Fecha Llegada,Estado,FOB ($),Aduana ($),Naviera ($),Almacén ($),Poggi ($),Total ($)\n';
-            contenedores.forEach((c, i) => {
-                const total = (c.fob || 0) + (c.aduana || 0) + (c.naviera || 0) + (c.almacen || 0) + (c.poggi || 0);
-                csv += `${i + 1},"${c.contenedor}","${c.fecha}","${c.estado}",${c.fob},${c.aduana},${c.naviera},${c.almacen},${c.poggi},${total.toFixed(2)}\n`;
+        function exportar() {
+            let csv = "N°,Contenedor,Fecha Llegada,Estado,FOB (S/),Aduana (S/),Naviera (S/),Almacén (S/),Poggi (S/),Total (S/),FOB TOTAL (S/),IMPUESTOS (S/),GASTOS (S/),TOTAL GENERAL (S/)\n";
+            items.forEach((item, i) => {
+                let total = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
+                let impuestos = item.aduana;
+                let gastos = item.naviera + item.almacen + item.poggi;
+                let totalGral = item.fob + impuestos + gastos;
+                csv += `${i+1},"${item.cont}","${item.fecha}","${item.estado}",${item.fob},${item.aduana},${item.naviera},${item.almacen},${item.poggi},${total.toFixed(2)},${item.fob.toFixed(2)},${impuestos.toFixed(2)},${gastos.toFixed(2)},${totalGral.toFixed(2)}\n`;
             });
-            
-            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-            const a = document.createElement('a');
+            let blob = new Blob([csv], {type: 'text/csv'});
+            let a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `contenedores_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = 'contenedores.csv';
             a.click();
-            notificar('📤 CSV exportado correctamente', 'success');
         }
         
-        // ===== EXPORTAR EXCEL =====
-        function exportarExcel() {
-            exportarCSV();
-        }
-        
-        // ===== ACTUALIZAR TOTALES =====
-        function actualizarTotales() {
-            let fob = 0, aduana = 0, naviera = 0, almacen = 0, poggi = 0;
-            
-            contenedores.forEach(c => {
-                fob += c.fob || 0;
-                aduana += c.aduana || 0;
-                naviera += c.naviera || 0;
-                almacen += c.almacen || 0;
-                poggi += c.poggi || 0;
-            });
-            
-            const gastos = naviera + almacen + poggi;
-            const total = fob + aduana + gastos;
-            
-            document.getElementById('totFOB').textContent = '$' + fob.toFixed(2);
-            document.getElementById('totAduana').textContent = '$' + aduana.toFixed(2);
-            document.getElementById('totGastos').textContent = '$' + gastos.toFixed(2);
-            document.getElementById('totGeneral').textContent = '$' + total.toFixed(2);
-        }
-        
-        // ===== INICIAR =====
-        renderizar();
+        mostrar();
     </script>
 </body>
 </html>
