@@ -307,18 +307,18 @@
                     }
                     
                     // Detectar encabezados
-                    const encabezados = lineas[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                    const encabezados = lineas[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
                     
-                    // Mapear columnas
+                    // Mapear columnas - AHORA INCLUYE "N° CONTENEDOR"
                     const mapaColumnas = {
-                        'contenedor': ['contenedor', 'n° contenedor', 'n°contenedor', 'numero contenedor', 'contenedor', 'container'],
+                        'contenedor': ['n° contenedor', 'n°contenedor', 'numero contenedor', 'contenedor', 'container', 'n°'],
                         'fecha': ['fecha llegada', 'fecha', 'fecha_llegada', 'date'],
                         'estado': ['estado', 'status', 'state'],
-                        'fob': ['fob'],
-                        'aduana': ['aduana', 'customs'],
-                        'naviera': ['naviera', 'shipping'],
-                        'almacen': ['almacen', 'warehouse', 'almacén'],
-                        'poggi': ['poggi']
+                        'fob': ['fob', 'fob ($)'],
+                        'aduana': ['aduana', 'aduana ($)', 'customs'],
+                        'naviera': ['naviera', 'naviera ($)', 'shipping'],
+                        'almacen': ['almacen', 'almacén', 'almacén ($)', 'warehouse'],
+                        'poggi': ['poggi', 'poggi ($)']
                     };
                     
                     // Encontrar índices
@@ -334,8 +334,8 @@
                     }
                     
                     // Validar columnas mínimas
-                    if (!indices['contenedor']) {
-                        notificar('❌ No se encontró la columna "Contenedor" en el CSV', 'error');
+                    if (indices['contenedor'] === undefined) {
+                        notificar('❌ No se encontró la columna "N° Contenedor" en el CSV. Encabezados encontrados: ' + encabezados.join(', '), 'error');
                         return;
                     }
                     
@@ -348,7 +348,7 @@
                         
                         const nuevo = {
                             id: nextId++,
-                            contenedor: indices['contenedor'] !== undefined ? (columnas[indices['contenedor']] || '') : '',
+                            contenedor: columnas[indices['contenedor']] || '',
                             fecha: indices['fecha'] !== undefined ? (columnas[indices['fecha']] || '') : '',
                             estado: indices['estado'] !== undefined ? (columnas[indices['estado']] || 'En tránsito') : 'En tránsito',
                             fob: indices['fob'] !== undefined ? (parseFloat(columnas[indices['fob']]) || 0) : 0,
@@ -358,8 +358,15 @@
                             poggi: indices['poggi'] !== undefined ? (parseFloat(columnas[indices['poggi']]) || 0) : 0
                         };
                         
-                        nuevos.push(nuevo);
-                        importados++;
+                        if (nuevo.contenedor) {
+                            nuevos.push(nuevo);
+                            importados++;
+                        }
+                    }
+                    
+                    if (importados === 0) {
+                        notificar('⚠️ No se encontraron contenedores válidos en el archivo', 'error');
+                        return;
                     }
                     
                     contenedores = [...contenedores, ...nuevos];
@@ -369,11 +376,11 @@
                     
                 } catch (error) {
                     console.error(error);
-                    notificar('❌ Error al procesar el archivo CSV', 'error');
+                    notificar('❌ Error al procesar el archivo CSV: ' + error.message, 'error');
                 }
             };
             
-            reader.readAsText(file);
+            reader.readAsText(file, 'UTF-8');
             event.target.value = '';
         }
         
@@ -384,13 +391,13 @@
                 return;
             }
             
-            let csv = 'N°,Contenedor,Fecha Llegada,Estado,FOB,Aduana,Naviera,Almacén,Poggi,Total\n';
+            let csv = 'N°,N° Contenedor,Fecha Llegada,Estado,FOB ($),Aduana ($),Naviera ($),Almacén ($),Poggi ($),Total ($)\n';
             contenedores.forEach((c, i) => {
                 const total = (c.fob || 0) + (c.aduana || 0) + (c.naviera || 0) + (c.almacen || 0) + (c.poggi || 0);
                 csv += `${i + 1},"${c.contenedor}","${c.fecha}","${c.estado}",${c.fob},${c.aduana},${c.naviera},${c.almacen},${c.poggi},${total.toFixed(2)}\n`;
             });
             
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = `contenedores_${new Date().toISOString().split('T')[0]}.csv`;
@@ -400,23 +407,7 @@
         
         // ===== EXPORTAR EXCEL =====
         function exportarExcel() {
-            if (contenedores.length === 0) {
-                notificar('⚠️ No hay contenedores para exportar', 'error');
-                return;
-            }
-            
-            let csv = 'N°,Contenedor,Fecha Llegada,Estado,FOB,Aduana,Naviera,Almacén,Poggi,Total\n';
-            contenedores.forEach((c, i) => {
-                const total = (c.fob || 0) + (c.aduana || 0) + (c.naviera || 0) + (c.almacen || 0) + (c.poggi || 0);
-                csv += `${i + 1},"${c.contenedor}","${c.fecha}","${c.estado}",${c.fob},${c.aduana},${c.naviera},${c.almacen},${c.poggi},${total.toFixed(2)}\n`;
-            });
-            
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `contenedores_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            notificar('📊 Archivo exportado correctamente', 'success');
+            exportarCSV();
         }
         
         // ===== ACTUALIZAR TOTALES =====
