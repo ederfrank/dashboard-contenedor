@@ -6,182 +6,256 @@
     <title>Dashboard de Contenedores</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; padding: 20px; }
-        .dashboard { max-width: 100%; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; text-align: center; }
-        h1 { font-size: 2em; margin-bottom: 10px; }
-        .content { padding: 30px; overflow-x: auto; }
-        .section-title { font-size: 1.3em; font-weight: 600; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; min-width: 1600px; }
-        thead { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
-        th, td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #ddd; font-size: 13px; }
-        th { font-weight: 600; }
-        input, select { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; text-align: center; }
-        .btn { background: #667eea; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin: 5px; font-size: 13px; }
-        .btn:hover { background: #764ba2; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .dashboard {
+            max-width: 1500px; margin: 0 auto; background: white;
+            border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 25px 30px; text-align: center;
+        }
+        .header h1 { font-size: 2em; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 0.95em; }
+        .content { padding: 30px; }
+        .toolbar {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px;
+            align-items: center;
+        }
+        .section-title {
+            font-size: 1.3em; font-weight: 600; color: #333;
+            margin: 20px 0 15px 0; padding-bottom: 10px;
+            border-bottom: 3px solid #667eea; display: inline-block;
+        }
+        .table-wrapper {
+            overflow-x: auto; background: white;
+            border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 0.9em; }
+        th { font-weight: 600; font-size: 0.85em; letter-spacing: 0.5px; }
+        tbody tr:hover { background-color: #f5f7ff; }
+        input, select {
+            width: 100%; padding: 7px 10px;
+            border: 2px solid #e0e0e0; border-radius: 6px;
+            font-size: 0.85em; transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none; border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        .btn {
+            background: #667eea; color: white; border: none;
+            padding: 10px 18px; border-radius: 8px; cursor: pointer;
+            font-size: 0.9em; transition: all 0.3s; white-space: nowrap;
+        }
+        .btn:hover { background: #764ba2; transform: translateY(-1px); }
+        .btn-success { background: #4CAF50; }
+        .btn-success:hover { background: #45a049; }
+        .btn-warning { background: #ff9800; }
+        .btn-warning:hover { background: #f57c00; }
         .btn-danger { background: #ff6b6b; }
         .btn-danger:hover { background: #ee5a52; }
-        .spacer { background: #f0f0f0; width: 30px; }
-        .spacer th { background: #f0f0f0; }
-        .totals-section { background: linear-gradient(135deg, #f8f9ff, #f0f2ff); padding: 25px; border-radius: 12px; margin: 20px 0; }
-        .totals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-        .total-box { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .total-box h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
-        .total-box .amount { font-size: 28px; font-weight: bold; color: #333; }
-        .total-highlight { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .total-highlight h3, .total-highlight .amount { color: white; }
-        .row-total { font-weight: bold; background: #f9f9f9; }
-        .actions { text-align: center; margin-top: 20px; }
-        @media (max-width: 768px) { .totals-grid { grid-template-columns: repeat(2, 1fr); } }
+        .btn-info { background: #2196F3; }
+        .btn-info:hover { background: #1976D2; }
+        .summary-section {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+            padding: 25px; border-radius: 12px; margin: 30px 0;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px; margin-top: 15px;
+        }
+        .summary-item {
+            background: white; padding: 18px;
+            border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .summary-label { font-size: 0.85em; color: #666; margin-bottom: 8px; }
+        .summary-value { font-size: 1.6em; font-weight: bold; color: #333; }
+        .total-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+        }
+        .total-highlight .summary-label, .total-highlight .summary-value { color: white; }
+        .counter {
+            display: inline-block; background: #667eea; color: white;
+            padding: 5px 12px; border-radius: 20px; font-size: 0.85em;
+            margin-left: 10px;
+        }
+        #fileInput { display: none; }
+        .notification {
+            position: fixed; top: 20px; right: 20px;
+            padding: 15px 20px; border-radius: 8px; color: white;
+            z-index: 1000; animation: slideIn 0.3s ease;
+            font-weight: 500;
+        }
+        .notification-success { background: #4CAF50; }
+        .notification-error { background: #f44336; }
+        .notification-info { background: #2196F3; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .content { padding: 15px; }
+            .summary-grid { grid-template-columns: 1fr 1fr; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+        }
     </style>
 </head>
 <body>
     <div class="dashboard">
         <div class="header">
-            <h1>🚢 Dashboard de Contenedores - En Soles</h1>
-            <p>Control de Gastos de Importación - FOB, Aduana, Naviera, Almacén, Poggi</p>
+            <h1>🚢 Dashboard de Contenedores</h1>
+            <p>Control de Gastos de Importación - FOB · Aduana · Naviera · Almacén · Poggi</p>
         </div>
+        
         <div class="content">
-            <div class="section-title">📋 Registro de Contenedores</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>N°</th>
-                        <th>Contenedor</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>FOB (S/)</th>
-                        <th>Aduana (S/)</th>
-                        <th>Naviera (S/)</th>
-                        <th>Almacén (S/)</th>
-                        <th>Poggi (S/)</th>
-                        <th>Total (S/)</th>
-                        <th class="spacer"></th>
-                        <th>FOB TOTAL (S/)</th>
-                        <th>IMPUESTOS (S/)</th>
-                        <th>GASTOS (S/)</th>
-                        <th>TOTAL GENERAL (S/)</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="bodyTable"></tbody>
-            </table>
-            
-            <button class="btn" onclick="addRow()">➕ Agregar Contenedor</button>
-            
-            <div class="totals-section">
-                <div class="section-title" style="margin-top:0;">💰 Resumen General en Soles</div>
-                <div class="totals-grid">
-                    <div class="total-box">
-                        <h3>FOB TOTAL</h3>
-                        <div class="amount" id="granFOB">S/ 0</div>
-                    </div>
-                    <div class="total-box">
-                        <h3>IMPUESTOS<br>(Aduana)</h3>
-                        <div class="amount" id="granImpuestos">S/ 0</div>
-                    </div>
-                    <div class="total-box">
-                        <h3>GASTOS<br>(Naviera+Almacén+Poggi)</h3>
-                        <div class="amount" id="granGastos">S/ 0</div>
-                    </div>
-                    <div class="total-box total-highlight">
-                        <h3>TOTAL GENERAL</h3>
-                        <div class="amount" id="granTotal">S/ 0</div>
-                    </div>
-                </div>
+            <!-- BARRA DE HERRAMIENTAS -->
+            <div class="toolbar">
+                <button class="btn" onclick="agregarFila()">➕ Agregar Contenedor</button>
+                <button class="btn btn-info" onclick="document.getElementById('fileInput').click()">
+                    📥 Importar CSV
+                </button>
+                <input type="file" id="fileInput" accept=".csv" onchange="importarCSV(event)">
+                <button class="btn btn-warning" onclick="exportarCSV()">📤 Exportar CSV</button>
+                <button class="btn btn-success" onclick="exportarExcel()">📊 Exportar Excel</button>
+                <button class="btn btn-danger" onclick="limpiarTodo()">🗑️ Limpiar Todo</button>
+                <span class="counter" id="contador">0 contenedores</span>
             </div>
             
-            <div class="actions">
-                <button class="btn" onclick="exportar()">📊 Exportar a Excel</button>
-                <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+            <!-- TABLA -->
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>N° Contenedor</th>
+                            <th>Fecha Llegada</th>
+                            <th>Estado</th>
+                            <th>FOB ($)</th>
+                            <th>Aduana ($)</th>
+                            <th>Naviera ($)</th>
+                            <th>Almacén ($)</th>
+                            <th>Poggi ($)</th>
+                            <th>Total ($)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody">
+                        <tr><td colspan="11" style="text-align:center;padding:40px;color:#999;">
+                            No hay contenedores. ¡Agrega uno o importa un CSV!
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- RESUMEN FINANCIERO -->
+            <div class="summary-section">
+                <div class="section-title" style="margin-top:0;">💰 Resumen Financiero</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">FOB (Inicial)</div>
+                        <div class="summary-value" id="totFOB">$0</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Impuestos (Aduana)</div>
+                        <div class="summary-value" id="totAduana">$0</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Gastos</div>
+                        <div class="summary-value" id="totGastos">$0</div>
+                    </div>
+                    <div class="summary-item total-highlight">
+                        <div class="summary-label">TOTAL GENERAL</div>
+                        <div class="summary-value" id="totGeneral">$0</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let items = JSON.parse(localStorage.getItem('misdatos')) || [];
+        // ===== DATOS =====
+        let contenedores = JSON.parse(localStorage.getItem('contenedores_data')) || [];
+        let nextId = contenedores.length > 0 ? Math.max(...contenedores.map(c => c.id)) + 1 : 1;
         
-        if (items.length === 0) {
-            items = [
-                {id:1, cont:'MSCU1234567', fecha:'2024-01-15', estado:'En tránsito', fob:15000, aduana:2500, naviera:1200, almacen:800, poggi:500},
-                {id:2, cont:'MAEU9876543', fecha:'2024-01-20', estado:'En aduana', fob:22000, aduana:3800, naviera:1500, almacen:950, poggi:600},
-                {id:3, cont:'CMAU4567890', fecha:'2024-02-01', estado:'Liberado', fob:18000, aduana:3000, naviera:1300, almacen:850, poggi:550}
-            ];
-            guardar();
-        }
-        
+        // ===== GUARDAR EN LOCALSTORAGE =====
         function guardar() {
-            localStorage.setItem('misdatos', JSON.stringify(items));
+            localStorage.setItem('contenedores_data', JSON.stringify(contenedores));
         }
         
-        function formatSoles(valor) {
-            return 'S/ ' + valor.toFixed(2);
+        // ===== NOTIFICACIONES =====
+        function notificar(mensaje, tipo) {
+            const n = document.createElement('div');
+            n.className = `notification notification-${tipo}`;
+            n.textContent = mensaje;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 3000);
         }
         
-        function mostrar() {
-            let html = '';
-            let totalFOB = 0, totalAduana = 0, totalNaviera = 0, totalAlmacen = 0, totalPoggi = 0;
+        // ===== RENDERIZAR TABLA =====
+        function renderizar() {
+            const tbody = document.getElementById('tablaBody');
+            document.getElementById('contador').textContent = `${contenedores.length} contenedores`;
             
-            items.forEach((item, i) => {
-                let totalFila = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
-                let impuestos = item.aduana;
-                let gastos = item.naviera + item.almacen + item.poggi;
-                let totalGeneral = item.fob + impuestos + gastos;
-                
-                totalFOB += item.fob;
-                totalAduana += item.aduana;
-                totalNaviera += item.naviera;
-                totalAlmacen += item.almacen;
-                totalPoggi += item.poggi;
-                
-                html += `<tr>
-                    <td>${i+1}</td>
-                    <td><input value="${item.cont}" onchange="cambiar(${item.id}, 'cont', this.value)"></td>
-                    <td><input type="date" value="${item.fecha}" onchange="cambiar(${item.id}, 'fecha', this.value)"></td>
-                    <td><select onchange="cambiar(${item.id}, 'estado', this.value)">
-                        <option ${item.estado=='En tránsito'?'selected':''}>En tránsito</option>
-                        <option ${item.estado=='En aduana'?'selected':''}>En aduana</option>
-                        <option ${item.estado=='Liberado'?'selected':''}>Liberado</option>
-                        <option ${item.estado=='Entregado'?'selected':''}>Entregado</option>
-                    </select></td>
-                    <td><input type="number" value="${item.fob}" onchange="cambiar(${item.id}, 'fob', Number(this.value))"></td>
-                    <td><input type="number" value="${item.aduana}" onchange="cambiar(${item.id}, 'aduana', Number(this.value))"></td>
-                    <td><input type="number" value="${item.naviera}" onchange="cambiar(${item.id}, 'naviera', Number(this.value))"></td>
-                    <td><input type="number" value="${item.almacen}" onchange="cambiar(${item.id}, 'almacen', Number(this.value))"></td>
-                    <td><input type="number" value="${item.poggi}" onchange="cambiar(${item.id}, 'poggi', Number(this.value))"></td>
-                    <td class="row-total">${formatSoles(totalFila)}</td>
-                    <td class="spacer"></td>
-                    <td class="row-total">${formatSoles(item.fob)}</td>
-                    <td class="row-total">${formatSoles(impuestos)}</td>
-                    <td class="row-total">${formatSoles(gastos)}</td>
-                    <td class="row-total">${formatSoles(totalGeneral)}</td>
-                    <td><button class="btn btn-danger" onclick="borrar(${item.id})">🗑️</button></td>
+            if (contenedores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#999;">No hay contenedores. ¡Agrega uno o importa un CSV!</td></tr>';
+                actualizarTotales();
+                return;
+            }
+            
+            tbody.innerHTML = contenedores.map((c, i) => {
+                const total = (c.fob || 0) + (c.aduana || 0) + (c.naviera || 0) + (c.almacen || 0) + (c.poggi || 0);
+                return `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><input type="text" value="${c.contenedor || ''}" onchange="actualizarCampo(${c.id}, 'contenedor', this.value)" placeholder="N° contenedor"></td>
+                    <td><input type="date" value="${c.fecha || ''}" onchange="actualizarCampo(${c.id}, 'fecha', this.value)"></td>
+                    <td>
+                        <select onchange="actualizarCampo(${c.id}, 'estado', this.value)">
+                            <option value="">Seleccionar</option>
+                            ${['En tránsito','En aduana','Liberado','Entregado','Con incidencia'].map(e => 
+                                `<option value="${e}" ${c.estado === e ? 'selected' : ''}>${e}</option>`
+                            ).join('')}
+                        </select>
+                    </td>
+                    <td><input type="number" step="0.01" value="${c.fob || 0}" onchange="actualizarCampo(${c.id}, 'fob', parseFloat(this.value) || 0)"></td>
+                    <td><input type="number" step="0.01" value="${c.aduana || 0}" onchange="actualizarCampo(${c.id}, 'aduana', parseFloat(this.value) || 0)"></td>
+                    <td><input type="number" step="0.01" value="${c.naviera || 0}" onchange="actualizarCampo(${c.id}, 'naviera', parseFloat(this.value) || 0)"></td>
+                    <td><input type="number" step="0.01" value="${c.almacen || 0}" onchange="actualizarCampo(${c.id}, 'almacen', parseFloat(this.value) || 0)"></td>
+                    <td><input type="number" step="0.01" value="${c.poggi || 0}" onchange="actualizarCampo(${c.id}, 'poggi', parseFloat(this.value) || 0)"></td>
+                    <td style="font-weight:bold;">$${total.toFixed(2)}</td>
+                    <td><button class="btn btn-danger" onclick="eliminar(${c.id})" style="padding:5px 10px;">🗑️</button></td>
                 </tr>`;
-            });
+            }).join('');
             
-            document.getElementById('bodyTable').innerHTML = html;
-            
-            let granGastos = totalNaviera + totalAlmacen + totalPoggi;
-            let granTotal = totalFOB + totalAduana + granGastos;
-            
-            document.getElementById('granFOB').textContent = formatSoles(totalFOB);
-            document.getElementById('granImpuestos').textContent = formatSoles(totalAduana);
-            document.getElementById('granGastos').textContent = formatSoles(granGastos);
-            document.getElementById('granTotal').textContent = formatSoles(granTotal);
+            actualizarTotales();
         }
         
-        function cambiar(id, campo, valor) {
-            let item = items.find(i => i.id === id);
-            item[campo] = valor;
-            guardar();
-            mostrar();
+        // ===== ACTUALIZAR CAMPO =====
+        function actualizarCampo(id, campo, valor) {
+            const c = contenedores.find(x => x.id === id);
+            if (c) {
+                c[campo] = valor;
+                guardar();
+                renderizar();
+            }
         }
         
-        function addRow() {
-            let maxId = items.length > 0 ? Math.max(...items.map(i => i.id)) : 0;
-            items.push({
-                id: maxId + 1,
-                cont: '',
+        // ===== AGREGAR FILA =====
+        function agregarFila() {
+            contenedores.push({
+                id: nextId++,
+                contenedor: '',
                 fecha: '',
                 estado: 'En tránsito',
                 fob: 0,
@@ -191,34 +265,183 @@
                 poggi: 0
             });
             guardar();
-            mostrar();
+            renderizar();
+            notificar('✅ Contenedor agregado', 'success');
         }
         
-        function borrar(id) {
+        // ===== ELIMINAR =====
+        function eliminar(id) {
             if (confirm('¿Eliminar este contenedor?')) {
-                items = items.filter(i => i.id !== id);
+                contenedores = contenedores.filter(c => c.id !== id);
                 guardar();
-                mostrar();
+                renderizar();
+                notificar('🗑️ Contenedor eliminado', 'info');
             }
         }
         
-        function exportar() {
-            let csv = "N°,Contenedor,Fecha,Estado,FOB (S/),Aduana (S/),Naviera (S/),Almacén (S/),Poggi (S/),Total (S/),FOB TOTAL (S/),IMPUESTOS (S/),GASTOS (S/),TOTAL GENERAL (S/)\n";
-            items.forEach((item, i) => {
-                let total = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
-                let impuestos = item.aduana;
-                let gastos = item.naviera + item.almacen + item.poggi;
-                let totalGral = item.fob + impuestos + gastos;
-                csv += `${i+1},"${item.cont}","${item.fecha}","${item.estado}",${item.fob},${item.aduana},${item.naviera},${item.almacen},${item.poggi},${total.toFixed(2)},${item.fob.toFixed(2)},${impuestos.toFixed(2)},${gastos.toFixed(2)},${totalGral.toFixed(2)}\n`;
-            });
-            let blob = new Blob([csv], {type: 'text/csv'});
-            let a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'contenedores.csv';
-            a.click();
+        // ===== LIMPIAR TODO =====
+        function limpiarTodo() {
+            if (confirm('⚠️ ¿Eliminar TODOS los contenedores? Esta acción no se puede deshacer.')) {
+                contenedores = [];
+                nextId = 1;
+                guardar();
+                renderizar();
+                notificar('🗑️ Todos los contenedores eliminados', 'info');
+            }
         }
         
-        mostrar();
+        // ===== IMPORTAR CSV =====
+        function importarCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const texto = e.target.result;
+                    const lineas = texto.split('\n').filter(linea => linea.trim() !== '');
+                    
+                    if (lineas.length < 2) {
+                        notificar('❌ El archivo CSV está vacío o solo tiene encabezados', 'error');
+                        return;
+                    }
+                    
+                    // Detectar encabezados
+                    const encabezados = lineas[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                    
+                    // Mapear columnas
+                    const mapaColumnas = {
+                        'contenedor': ['contenedor', 'n° contenedor', 'n°contenedor', 'numero contenedor', 'contenedor', 'container'],
+                        'fecha': ['fecha llegada', 'fecha', 'fecha_llegada', 'date'],
+                        'estado': ['estado', 'status', 'state'],
+                        'fob': ['fob'],
+                        'aduana': ['aduana', 'customs'],
+                        'naviera': ['naviera', 'shipping'],
+                        'almacen': ['almacen', 'warehouse', 'almacén'],
+                        'poggi': ['poggi']
+                    };
+                    
+                    // Encontrar índices
+                    const indices = {};
+                    for (const [campo, opciones] of Object.entries(mapaColumnas)) {
+                        for (const opcion of opciones) {
+                            const idx = encabezados.findIndex(h => h.includes(opcion));
+                            if (idx !== -1) {
+                                indices[campo] = idx;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Validar columnas mínimas
+                    if (!indices['contenedor']) {
+                        notificar('❌ No se encontró la columna "Contenedor" en el CSV', 'error');
+                        return;
+                    }
+                    
+                    let importados = 0;
+                    const nuevos = [];
+                    
+                    for (let i = 1; i < lineas.length; i++) {
+                        const columnas = lineas[i].split(',').map(c => c.trim().replace(/"/g, ''));
+                        if (columnas.length < 2) continue;
+                        
+                        const nuevo = {
+                            id: nextId++,
+                            contenedor: indices['contenedor'] !== undefined ? (columnas[indices['contenedor']] || '') : '',
+                            fecha: indices['fecha'] !== undefined ? (columnas[indices['fecha']] || '') : '',
+                            estado: indices['estado'] !== undefined ? (columnas[indices['estado']] || 'En tránsito') : 'En tránsito',
+                            fob: indices['fob'] !== undefined ? (parseFloat(columnas[indices['fob']]) || 0) : 0,
+                            aduana: indices['aduana'] !== undefined ? (parseFloat(columnas[indices['aduana']]) || 0) : 0,
+                            naviera: indices['naviera'] !== undefined ? (parseFloat(columnas[indices['naviera']]) || 0) : 0,
+                            almacen: indices['almacen'] !== undefined ? (parseFloat(columnas[indices['almacen']]) || 0) : 0,
+                            poggi: indices['poggi'] !== undefined ? (parseFloat(columnas[indices['poggi']]) || 0) : 0
+                        };
+                        
+                        nuevos.push(nuevo);
+                        importados++;
+                    }
+                    
+                    contenedores = [...contenedores, ...nuevos];
+                    guardar();
+                    renderizar();
+                    notificar(`✅ ${importados} contenedores importados exitosamente`, 'success');
+                    
+                } catch (error) {
+                    console.error(error);
+                    notificar('❌ Error al procesar el archivo CSV', 'error');
+                }
+            };
+            
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        // ===== EXPORTAR CSV =====
+        function exportarCSV() {
+            if (contenedores.length === 0) {
+                notificar('⚠️ No hay contenedores para exportar', 'error');
+                return;
+            }
+            
+            let csv = 'N°,Contenedor,Fecha Llegada,Estado,FOB,Aduana,Naviera,Almacén,Poggi,Total\n';
+            contenedores.forEach((c, i) => {
+                const total = (c.fob || 0) + (c.aduana || 0) + (c.naviera || 0) + (c.almacen || 0) + (c.poggi || 0);
+                csv += `${i + 1},"${c.contenedor}","${c.fecha}","${c.estado}",${c.fob},${c.aduana},${c.naviera},${c.almacen},${c.poggi},${total.toFixed(2)}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `contenedores_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            notificar('📤 CSV exportado correctamente', 'success');
+        }
+        
+        // ===== EXPORTAR EXCEL =====
+        function exportarExcel() {
+            if (contenedores.length === 0) {
+                notificar('⚠️ No hay contenedores para exportar', 'error');
+                return;
+            }
+            
+            let csv = 'N°,Contenedor,Fecha Llegada,Estado,FOB,Aduana,Naviera,Almacén,Poggi,Total\n';
+            contenedores.forEach((c, i) => {
+                const total = (c.fob || 0) + (c.aduana || 0) + (c.naviera || 0) + (c.almacen || 0) + (c.poggi || 0);
+                csv += `${i + 1},"${c.contenedor}","${c.fecha}","${c.estado}",${c.fob},${c.aduana},${c.naviera},${c.almacen},${c.poggi},${total.toFixed(2)}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `contenedores_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            notificar('📊 Archivo exportado correctamente', 'success');
+        }
+        
+        // ===== ACTUALIZAR TOTALES =====
+        function actualizarTotales() {
+            let fob = 0, aduana = 0, naviera = 0, almacen = 0, poggi = 0;
+            
+            contenedores.forEach(c => {
+                fob += c.fob || 0;
+                aduana += c.aduana || 0;
+                naviera += c.naviera || 0;
+                almacen += c.almacen || 0;
+                poggi += c.poggi || 0;
+            });
+            
+            const gastos = naviera + almacen + poggi;
+            const total = fob + aduana + gastos;
+            
+            document.getElementById('totFOB').textContent = '$' + fob.toFixed(2);
+            document.getElementById('totAduana').textContent = '$' + aduana.toFixed(2);
+            document.getElementById('totGastos').textContent = '$' + gastos.toFixed(2);
+            document.getElementById('totGeneral').textContent = '$' + total.toFixed(2);
+        }
+        
+        // ===== INICIAR =====
+        renderizar();
     </script>
 </body>
 </html>
