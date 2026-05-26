@@ -12,6 +12,12 @@
         h1 { font-size: 2em; margin-bottom: 10px; }
         .content { padding: 30px; overflow-x: auto; }
         .section-title { font-size: 1.3em; font-weight: 600; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
+        
+        .filter-section { background: #f5f5f5; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .filter-section label { font-weight: bold; margin-right: 10px; }
+        .filter-section select { padding: 8px; border: 1px solid #ddd; border-radius: 5px; min-width: 200px; }
+        .filter-section .btn { margin-left: 10px; }
+        
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; min-width: 1600px; }
         thead { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
         th, td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #ddd; font-size: 13px; }
@@ -23,6 +29,8 @@
         .btn-danger:hover { background: #ee5a52; }
         .btn-success { background: #4CAF50; }
         .btn-success:hover { background: #45a049; }
+        .btn-info { background: #2196F3; }
+        .btn-info:hover { background: #1976D2; }
         .spacer { background: #f0f0f0; width: 30px; }
         .totals-section { background: linear-gradient(135deg, #f8f9ff, #f0f2ff); padding: 25px; border-radius: 12px; margin: 20px 0; }
         .totals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -33,6 +41,18 @@
         .total-highlight h3, .total-highlight .amount { color: white; }
         .row-total { font-weight: bold; background: #f9f9f9; }
         .actions { text-align: center; margin-top: 20px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; margin: 50px auto; padding: 30px; width: 90%; max-width: 800px; border-radius: 15px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { font-size: 1.3em; font-weight: bold; margin-bottom: 20px; }
+        .file-list { list-style: none; padding: 0; }
+        .file-list li { padding: 10px; border: 1px solid #ddd; margin: 5px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .file-list li:hover { background: #f5f5f5; }
+        .close { float: right; font-size: 24px; cursor: pointer; }
+        .close:hover { color: #ff6b6b; }
+        
+        .document-section { background: #fffbe6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffe082; }
+        
         @media (max-width: 768px) { .totals-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
@@ -43,6 +63,28 @@
             <p>Control de Gastos de Importación - FOB, Aduana, Naviera, Almacén, Poggi</p>
         </div>
         <div class="content">
+            <!-- FILTRO -->
+            <div class="filter-section">
+                <label>🔍 Filtrar contenedores:</label>
+                <select id="filterSelect" onchange="filtrar()">
+                    <option value="todos">📋 Todos los contenedores</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="O escribe números: 648,655,660" style="width:300px; padding:8px;" onkeyup="buscarManual()">
+                <button class="btn btn-info" onclick="mostrarTodos()">🔄 Mostrar Todos</button>
+            </div>
+            
+            <!-- DOCUMENTOS -->
+            <div class="document-section">
+                <strong>📎 Documentos por Contenedor:</strong>
+                <select id="docContainerSelect" style="width:200px; margin: 0 10px;">
+                    <option value="">Seleccionar contenedor</option>
+                </select>
+                <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="adjuntarDocumento()">
+                <button class="btn btn-success" onclick="document.getElementById('docFile').click()">📤 Adjuntar Documento</button>
+                <button class="btn btn-info" onclick="verDocumentos()">👁️ Ver Documentos</button>
+                <button class="btn" onclick="descargarDocumentos()">📥 Descargar Todo</button>
+            </div>
+            
             <div class="section-title">📋 Registro de Contenedores</div>
             <table>
                 <thead>
@@ -99,6 +141,15 @@
             </div>
         </div>
     </div>
+    
+    <!-- Modal para ver documentos -->
+    <div class="modal" id="docModal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('docModal').style.display='none'">&times;</span>
+            <div class="modal-header">📁 Documentos del Contenedor: <span id="modalContName"></span></div>
+            <ul class="file-list" id="fileList"></ul>
+        </div>
+    </div>
 
     <script>
         // Datos iniciales de los 45 contenedores
@@ -151,28 +202,48 @@
         ];
         
         let items = JSON.parse(localStorage.getItem('misdatos')) || [...datosIniciales];
+        let documentos = JSON.parse(localStorage.getItem('documentos')) || {};
+        let filtroActual = 'todos';
         
-        function guardar() {
-            localStorage.setItem('misdatos', JSON.stringify(items));
-        }
+        function guardar() { localStorage.setItem('misdatos', JSON.stringify(items)); }
+        function guardarDocs() { localStorage.setItem('documentos', JSON.stringify(documentos)); }
         
         function resetData() {
-            if (confirm('¿Recargar los 45 contenedores originales? Se perderán los cambios.')) {
+            if (confirm('¿Recargar los 45 contenedores originales? Se perderán los cambios en datos.')) {
                 items = [...datosIniciales];
                 guardar();
+                filtroActual = 'todos';
+                document.getElementById('searchInput').value = '';
+                document.getElementById('filterSelect').value = 'todos';
                 mostrar();
+                llenarSelects();
             }
         }
         
         function formatSoles(valor) {
-            return 'S/ ' + valor.toFixed(2);
+            return 'S/ ' + valor.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+        
+        function getItemsFiltrados() {
+            if (filtroActual === 'todos') return items;
+            let filtrados = [];
+            items.forEach(item => {
+                if (filtroActual.includes(',')) {
+                    let nums = filtroActual.split(',').map(n => n.trim());
+                    if (nums.includes(item.cont)) filtrados.push(item);
+                } else {
+                    if (item.cont === filtroActual) filtrados.push(item);
+                }
+            });
+            return filtrados;
         }
         
         function mostrar() {
             let html = '';
             let totalFOB = 0, totalAduana = 0, totalNaviera = 0, totalAlmacen = 0, totalPoggi = 0;
+            let itemsMostrar = getItemsFiltrados();
             
-            items.forEach((item, i) => {
+            itemsMostrar.forEach((item, i) => {
                 let totalFila = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
                 let impuestos = item.aduana;
                 let gastos = item.naviera + item.almacen + item.poggi;
@@ -184,8 +255,10 @@
                 totalAlmacen += item.almacen;
                 totalPoggi += item.poggi;
                 
+                let numOriginal = items.findIndex(it => it.id === item.id) + 1;
+                
                 html += `<tr>
-                    <td>${i+1}</td>
+                    <td>${numOriginal}</td>
                     <td><input value="${item.cont}" onchange="cambiar(${item.id}, 'cont', this.value)"></td>
                     <td><input type="date" value="${item.fecha}" onchange="cambiar(${item.id}, 'fecha', this.value)"></td>
                     <td><select onchange="cambiar(${item.id}, 'estado', this.value)">
@@ -209,7 +282,7 @@
                 </tr>`;
             });
             
-            document.getElementById('bodyTable').innerHTML = html;
+            document.getElementById('bodyTable').innerHTML = html || '<tr><td colspan="16">No se encontraron contenedores con ese filtro.</td></tr>';
             
             let granGastos = totalNaviera + totalAlmacen + totalPoggi;
             let granTotal = totalFOB + totalAduana + granGastos;
@@ -225,23 +298,18 @@
             item[campo] = valor;
             guardar();
             mostrar();
+            llenarSelects();
         }
         
         function addRow() {
             let maxId = items.length > 0 ? Math.max(...items.map(i => i.id)) : 0;
             items.push({
-                id: maxId + 1,
-                cont: '',
-                fecha: '',
-                estado: 'En tránsito',
-                fob: 0,
-                aduana: 0,
-                naviera: 0,
-                almacen: 0,
-                poggi: 0
+                id: maxId + 1, cont: '', fecha: '', estado: 'En tránsito',
+                fob: 0, aduana: 0, naviera: 0, almacen: 0, poggi: 0
             });
             guardar();
             mostrar();
+            llenarSelects();
         }
         
         function borrar(id) {
@@ -249,12 +317,132 @@
                 items = items.filter(i => i.id !== id);
                 guardar();
                 mostrar();
+                llenarSelects();
             }
         }
         
+        function filtrar() {
+            filtroActual = document.getElementById('filterSelect').value;
+            document.getElementById('searchInput').value = '';
+            mostrar();
+        }
+        
+        function buscarManual() {
+            let valor = document.getElementById('searchInput').value.trim();
+            if (valor === '') { filtroActual = 'todos'; }
+            else { filtroActual = valor; }
+            document.getElementById('filterSelect').value = 'todos';
+            mostrar();
+        }
+        
+        function mostrarTodos() {
+            filtroActual = 'todos';
+            document.getElementById('filterSelect').value = 'todos';
+            document.getElementById('searchInput').value = '';
+            mostrar();
+        }
+        
+        function llenarSelects() {
+            let filterSelect = document.getElementById('filterSelect');
+            let docSelect = document.getElementById('docContainerSelect');
+            
+            filterSelect.innerHTML = '<option value="todos">📋 Todos los contenedores</option>';
+            docSelect.innerHTML = '<option value="">Seleccionar contenedor</option>';
+            
+            items.forEach(item => {
+                if (item.cont) {
+                    filterSelect.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
+                    docSelect.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
+                }
+            });
+        }
+        
+        function adjuntarDocumento() {
+            let cont = document.getElementById('docContainerSelect').value;
+            let file = document.getElementById('docFile').files[0];
+            
+            if (!cont) { alert('Selecciona un contenedor primero'); return; }
+            if (!file) { alert('Selecciona un archivo'); return; }
+            
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                if (!documentos[cont]) documentos[cont] = [];
+                documentos[cont].push({
+                    nombre: file.name,
+                    tipo: file.type,
+                    datos: e.target.result,
+                    fecha: new Date().toLocaleString()
+                });
+                guardarDocs();
+                alert('✅ Documento adjuntado al contenedor ' + cont);
+                document.getElementById('docFile').value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function verDocumentos() {
+            let cont = document.getElementById('docContainerSelect').value;
+            if (!cont) { alert('Selecciona un contenedor'); return; }
+            
+            document.getElementById('modalContName').textContent = cont;
+            let lista = document.getElementById('fileList');
+            let docs = documentos[cont] || [];
+            
+            if (docs.length === 0) {
+                lista.innerHTML = '<li>No hay documentos adjuntos para este contenedor.</li>';
+            } else {
+                lista.innerHTML = docs.map((doc, i) => `
+                    <li>
+                        <span>${doc.tipo.includes('pdf') ? '📄' : '🖼️'} ${doc.nombre} (${doc.fecha})</span>
+                        <span>
+                            <button class="btn btn-info" onclick="verDoc('${cont}', ${i})">👁️ Ver</button>
+                            <button class="btn btn-danger" onclick="eliminarDoc('${cont}', ${i})">🗑️</button>
+                        </span>
+                    </li>
+                `).join('');
+            }
+            
+            document.getElementById('docModal').style.display = 'block';
+        }
+        
+        function verDoc(cont, index) {
+            let doc = documentos[cont][index];
+            let win = window.open('', '_blank');
+            if (doc.tipo.includes('pdf')) {
+                win.document.write(`<iframe src="${doc.datos}" width="100%" height="100%"></iframe>`);
+            } else {
+                win.document.write(`<img src="${doc.datos}" style="max-width:100%;">`);
+            }
+        }
+        
+        function eliminarDoc(cont, index) {
+            if (confirm('¿Eliminar este documento?')) {
+                documentos[cont].splice(index, 1);
+                if (documentos[cont].length === 0) delete documentos[cont];
+                guardarDocs();
+                verDocumentos();
+            }
+        }
+        
+        function descargarDocumentos() {
+            let cont = document.getElementById('docContainerSelect').value;
+            if (!cont) { alert('Selecciona un contenedor'); return; }
+            
+            let docs = documentos[cont] || [];
+            if (docs.length === 0) { alert('No hay documentos para descargar'); return; }
+            
+            docs.forEach((doc, i) => {
+                let a = document.createElement('a');
+                a.href = doc.datos;
+                a.download = `${cont}_${doc.nombre}`;
+                a.click();
+            });
+        }
+        
         function exportar() {
+            let itemsExport = getItemsFiltrados();
             let csv = "N°,Contenedor,Fecha Llegada,Estado,FOB (S/),Aduana (S/),Naviera (S/),Almacén (S/),Poggi (S/),Total (S/),FOB TOTAL (S/),IMPUESTOS (S/),GASTOS (S/),TOTAL GENERAL (S/)\n";
-            items.forEach((item, i) => {
+            itemsExport.forEach((item, i) => {
                 let total = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
                 let impuestos = item.aduana;
                 let gastos = item.naviera + item.almacen + item.poggi;
@@ -268,7 +456,14 @@
             a.click();
         }
         
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            let modal = document.getElementById('docModal');
+            if (event.target == modal) modal.style.display = 'none';
+        }
+        
         mostrar();
+        llenarSelects();
     </script>
 </body>
 </html>
