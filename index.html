@@ -12,12 +12,10 @@
         h1 { font-size: 2em; margin-bottom: 10px; }
         .content { padding: 30px; overflow-x: auto; }
         .section-title { font-size: 1.3em; font-weight: 600; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
-        
         .filter-section { background: #f5f5f5; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .filter-section label { font-weight: bold; margin-right: 10px; }
         .filter-section select { padding: 8px; border: 1px solid #ddd; border-radius: 5px; min-width: 200px; }
         .filter-section .btn { margin-left: 10px; }
-        
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; min-width: 1600px; }
         thead { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
         th, td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #ddd; font-size: 13px; }
@@ -27,10 +25,9 @@
         .btn:hover { background: #764ba2; }
         .btn-danger { background: #ff6b6b; }
         .btn-danger:hover { background: #ee5a52; }
-        .btn-success { background: #4CAF50; }
-        .btn-success:hover { background: #45a049; }
         .btn-info { background: #2196F3; }
         .btn-info:hover { background: #1976D2; }
+        .btn-success { background: #4CAF50; }
         .spacer { background: #f0f0f0; width: 30px; }
         .totals-section { background: linear-gradient(135deg, #f8f9ff, #f0f2ff); padding: 25px; border-radius: 12px; margin: 20px 0; }
         .totals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -41,7 +38,7 @@
         .total-highlight h3, .total-highlight .amount { color: white; }
         .row-total { font-weight: bold; background: #f9f9f9; }
         .actions { text-align: center; margin-top: 20px; }
-        
+        .money-input { text-align: right; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
         .modal-content { background: white; margin: 50px auto; padding: 30px; width: 90%; max-width: 800px; border-radius: 15px; max-height: 80vh; overflow-y: auto; }
         .modal-header { font-size: 1.3em; font-weight: bold; margin-bottom: 20px; }
@@ -50,9 +47,7 @@
         .file-list li:hover { background: #f5f5f5; }
         .close { float: right; font-size: 24px; cursor: pointer; }
         .close:hover { color: #ff6b6b; }
-        
         .document-section { background: #fffbe6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffe082; }
-        
         @media (max-width: 768px) { .totals-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
@@ -63,7 +58,6 @@
             <p>Control de Gastos de Importación - FOB, Aduana, Naviera, Almacén, Poggi</p>
         </div>
         <div class="content">
-            <!-- FILTRO -->
             <div class="filter-section">
                 <label>🔍 Filtrar contenedores:</label>
                 <select id="filterSelect" onchange="filtrar()">
@@ -73,7 +67,6 @@
                 <button class="btn btn-info" onclick="mostrarTodos()">🔄 Mostrar Todos</button>
             </div>
             
-            <!-- DOCUMENTOS -->
             <div class="document-section">
                 <strong>📎 Documentos por Contenedor:</strong>
                 <select id="docContainerSelect" style="width:200px; margin: 0 10px;">
@@ -89,21 +82,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th>N°</th>
-                        <th>N° Contenedor</th>
-                        <th>Fecha Llegada</th>
-                        <th>Estado</th>
-                        <th>FOB (S/)</th>
-                        <th>Aduana (S/)</th>
-                        <th>Naviera (S/)</th>
-                        <th>Almacén (S/)</th>
-                        <th>Poggi (S/)</th>
-                        <th>Total (S/)</th>
-                        <th class="spacer"></th>
-                        <th>FOB TOTAL (S/)</th>
-                        <th>IMPUESTOS (S/)</th>
-                        <th>GASTOS (S/)</th>
-                        <th>TOTAL GENERAL (S/)</th>
+                        <th>N°</th><th>N° Contenedor</th><th>Fecha Llegada</th><th>Estado</th>
+                        <th>FOB (S/)</th><th>Aduana (S/)</th><th>Naviera (S/)</th><th>Almacén (S/)</th><th>Poggi (S/)</th>
+                        <th>Total (S/)</th><th class="spacer"></th>
+                        <th>FOB TOTAL (S/)</th><th>IMPUESTOS (S/)</th><th>GASTOS (S/)</th><th>TOTAL GENERAL (S/)</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
@@ -111,27 +93,14 @@
             </table>
             
             <button class="btn" onclick="addRow()">➕ Agregar Contenedor</button>
-            <button class="btn btn-success" onclick="resetData()">🔄 Recargar 45 Contenedores</button>
             
             <div class="totals-section">
                 <div class="section-title" style="margin-top:0;">💰 Resumen General en Soles</div>
                 <div class="totals-grid">
-                    <div class="total-box">
-                        <h3>FOB TOTAL</h3>
-                        <div class="amount" id="granFOB">S/ 0</div>
-                    </div>
-                    <div class="total-box">
-                        <h3>IMPUESTOS<br>(Aduana)</h3>
-                        <div class="amount" id="granImpuestos">S/ 0</div>
-                    </div>
-                    <div class="total-box">
-                        <h3>GASTOS<br>(Naviera+Almacén+Poggi)</h3>
-                        <div class="amount" id="granGastos">S/ 0</div>
-                    </div>
-                    <div class="total-box total-highlight">
-                        <h3>TOTAL GENERAL</h3>
-                        <div class="amount" id="granTotal">S/ 0</div>
-                    </div>
+                    <div class="total-box"><h3>FOB TOTAL</h3><div class="amount" id="granFOB">S/ 0</div></div>
+                    <div class="total-box"><h3>IMPUESTOS<br>(Aduana)</h3><div class="amount" id="granImpuestos">S/ 0</div></div>
+                    <div class="total-box"><h3>GASTOS<br>(Naviera+Almacén+Poggi)</h3><div class="amount" id="granGastos">S/ 0</div></div>
+                    <div class="total-box total-highlight"><h3>TOTAL GENERAL</h3><div class="amount" id="granTotal">S/ 0</div></div>
                 </div>
             </div>
             
@@ -142,7 +111,6 @@
         </div>
     </div>
     
-    <!-- Modal para ver documentos -->
     <div class="modal" id="docModal">
         <div class="modal-content">
             <span class="close" onclick="document.getElementById('docModal').style.display='none'">&times;</span>
@@ -152,7 +120,6 @@
     </div>
 
     <script>
-        // Datos iniciales de los 45 contenedores
         const datosIniciales = [
             {id:1, cont:'643', fecha:'', estado:'Entregado', fob:70380, aduana:25365.5, naviera:2725.5, almacen:3105, poggi:7360},
             {id:2, cont:'644', fecha:'', estado:'Entregado', fob:63048.75, aduana:17517, naviera:2725.5, almacen:3105, poggi:7360},
@@ -201,41 +168,26 @@
             {id:45, cont:'699', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0}
         ];
         
-        let items = JSON.parse(localStorage.getItem('misdatos')) || [...datosIniciales];
+        // Cargar datos: SIEMPRE usa datosIniciales como base
+        let items = [...datosIniciales];
         let documentos = JSON.parse(localStorage.getItem('documentos')) || {};
         let filtroActual = 'todos';
         
         function guardar() { localStorage.setItem('misdatos', JSON.stringify(items)); }
         function guardarDocs() { localStorage.setItem('documentos', JSON.stringify(documentos)); }
         
-        function resetData() {
-            if (confirm('¿Recargar los 45 contenedores originales? Se perderán los cambios en datos.')) {
-                items = [...datosIniciales];
-                guardar();
-                filtroActual = 'todos';
-                document.getElementById('searchInput').value = '';
-                document.getElementById('filterSelect').value = 'todos';
-                mostrar();
-                llenarSelects();
-            }
+        function formatNumber(valor) {
+            return valor.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
         
         function formatSoles(valor) {
-            return 'S/ ' + valor.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            return 'S/ ' + formatNumber(valor);
         }
         
         function getItemsFiltrados() {
             if (filtroActual === 'todos') return items;
-            let filtrados = [];
-            items.forEach(item => {
-                if (filtroActual.includes(',')) {
-                    let nums = filtroActual.split(',').map(n => n.trim());
-                    if (nums.includes(item.cont)) filtrados.push(item);
-                } else {
-                    if (item.cont === filtroActual) filtrados.push(item);
-                }
-            });
-            return filtrados;
+            let nums = filtroActual.split(',').map(n => n.trim());
+            return items.filter(item => nums.includes(item.cont));
         }
         
         function mostrar() {
@@ -267,11 +219,11 @@
                         <option ${item.estado=='Liberado'?'selected':''}>Liberado</option>
                         <option ${item.estado=='Entregado'?'selected':''}>Entregado</option>
                     </select></td>
-                    <td><input type="text" value="${formatNumber(item.fob)}" onchange="cambiar(${item.id}, 'fob', parseFloat(this.value.replace(/,/g, '')) || 0)" onfocus="this.value=${item.fob}" onblur="this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
-                    <td><input type="number" value="${item.aduana}" onchange="cambiar(${item.id}, 'aduana', Number(this.value))"></td>
-                    <td><input type="number" value="${item.naviera}" onchange="cambiar(${item.id}, 'naviera', Number(this.value))"></td>
-                    <td><input type="number" value="${item.almacen}" onchange="cambiar(${item.id}, 'almacen', Number(this.value))"></td>
-                    <td><input type="number" value="${item.poggi}" onchange="cambiar(${item.id}, 'poggi', Number(this.value))"></td>
+                    <td><input type="text" class="money-input" value="${formatNumber(item.fob)}" onfocus="this.value=${item.fob}" onblur="cambiar(${item.id},'fob',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
+                    <td><input type="text" class="money-input" value="${formatNumber(item.aduana)}" onfocus="this.value=${item.aduana}" onblur="cambiar(${item.id},'aduana',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
+                    <td><input type="text" class="money-input" value="${formatNumber(item.naviera)}" onfocus="this.value=${item.naviera}" onblur="cambiar(${item.id},'naviera',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
+                    <td><input type="text" class="money-input" value="${formatNumber(item.almacen)}" onfocus="this.value=${item.almacen}" onblur="cambiar(${item.id},'almacen',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
+                    <td><input type="text" class="money-input" value="${formatNumber(item.poggi)}" onfocus="this.value=${item.poggi}" onblur="cambiar(${item.id},'poggi',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
                     <td class="row-total">${formatSoles(totalFila)}</td>
                     <td class="spacer"></td>
                     <td class="row-total">${formatSoles(item.fob)}</td>
@@ -282,7 +234,7 @@
                 </tr>`;
             });
             
-            document.getElementById('bodyTable').innerHTML = html || '<tr><td colspan="16">No se encontraron contenedores con ese filtro.</td></tr>';
+            document.getElementById('bodyTable').innerHTML = html || '<tr><td colspan="16">No se encontraron contenedores.</td></tr>';
             
             let granGastos = totalNaviera + totalAlmacen + totalPoggi;
             let granTotal = totalFOB + totalAduana + granGastos;
@@ -291,34 +243,23 @@
             document.getElementById('granImpuestos').textContent = formatSoles(totalAduana);
             document.getElementById('granGastos').textContent = formatSoles(granGastos);
             document.getElementById('granTotal').textContent = formatSoles(granTotal);
+            
+            guardar();
         }
         
         function cambiar(id, campo, valor) {
             let item = items.find(i => i.id === id);
-            item[campo] = valor;
-            guardar();
-            mostrar();
-            llenarSelects();
+            if (item) { item[campo] = valor; mostrar(); llenarSelects(); }
         }
         
         function addRow() {
             let maxId = items.length > 0 ? Math.max(...items.map(i => i.id)) : 0;
-            items.push({
-                id: maxId + 1, cont: '', fecha: '', estado: 'En tránsito',
-                fob: 0, aduana: 0, naviera: 0, almacen: 0, poggi: 0
-            });
-            guardar();
-            mostrar();
-            llenarSelects();
+            items.push({id: maxId + 1, cont: '', fecha: '', estado: 'En tránsito', fob: 0, aduana: 0, naviera: 0, almacen: 0, poggi: 0});
+            mostrar(); llenarSelects();
         }
         
         function borrar(id) {
-            if (confirm('¿Eliminar este contenedor?')) {
-                items = items.filter(i => i.id !== id);
-                guardar();
-                mostrar();
-                llenarSelects();
-            }
+            if (confirm('¿Eliminar?')) { items = items.filter(i => i.id !== id); mostrar(); llenarSelects(); }
         }
         
         function filtrar() {
@@ -329,8 +270,7 @@
         
         function buscarManual() {
             let valor = document.getElementById('searchInput').value.trim();
-            if (valor === '') { filtroActual = 'todos'; }
-            else { filtroActual = valor; }
+            filtroActual = valor === '' ? 'todos' : valor;
             document.getElementById('filterSelect').value = 'todos';
             mostrar();
         }
@@ -345,10 +285,8 @@
         function llenarSelects() {
             let filterSelect = document.getElementById('filterSelect');
             let docSelect = document.getElementById('docContainerSelect');
-            
             filterSelect.innerHTML = '<option value="todos">📋 Todos los contenedores</option>';
             docSelect.innerHTML = '<option value="">Seleccionar contenedor</option>';
-            
             items.forEach(item => {
                 if (item.cont) {
                     filterSelect.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
@@ -360,21 +298,14 @@
         function adjuntarDocumento() {
             let cont = document.getElementById('docContainerSelect').value;
             let file = document.getElementById('docFile').files[0];
-            
-            if (!cont) { alert('Selecciona un contenedor primero'); return; }
+            if (!cont) { alert('Selecciona un contenedor'); return; }
             if (!file) { alert('Selecciona un archivo'); return; }
-            
             let reader = new FileReader();
             reader.onload = function(e) {
                 if (!documentos[cont]) documentos[cont] = [];
-                documentos[cont].push({
-                    nombre: file.name,
-                    tipo: file.type,
-                    datos: e.target.result,
-                    fecha: new Date().toLocaleString()
-                });
+                documentos[cont].push({nombre: file.name, tipo: file.type, datos: e.target.result, fecha: new Date().toLocaleString()});
                 guardarDocs();
-                alert('✅ Documento adjuntado al contenedor ' + cont);
+                alert('✅ Documento adjuntado a ' + cont);
                 document.getElementById('docFile').value = '';
             };
             reader.readAsDataURL(file);
@@ -383,60 +314,36 @@
         function verDocumentos() {
             let cont = document.getElementById('docContainerSelect').value;
             if (!cont) { alert('Selecciona un contenedor'); return; }
-            
             document.getElementById('modalContName').textContent = cont;
             let lista = document.getElementById('fileList');
             let docs = documentos[cont] || [];
-            
-            if (docs.length === 0) {
-                lista.innerHTML = '<li>No hay documentos adjuntos para este contenedor.</li>';
-            } else {
-                lista.innerHTML = docs.map((doc, i) => `
-                    <li>
-                        <span>${doc.tipo.includes('pdf') ? '📄' : '🖼️'} ${doc.nombre} (${doc.fecha})</span>
-                        <span>
-                            <button class="btn btn-info" onclick="verDoc('${cont}', ${i})">👁️ Ver</button>
-                            <button class="btn btn-danger" onclick="eliminarDoc('${cont}', ${i})">🗑️</button>
-                        </span>
-                    </li>
-                `).join('');
-            }
-            
+            lista.innerHTML = docs.length === 0 ? '<li>No hay documentos.</li>' : docs.map((doc, i) => `
+                <li>
+                    <span>${doc.tipo.includes('pdf') ? '📄' : '🖼️'} ${doc.nombre} (${doc.fecha})</span>
+                    <span>
+                        <button class="btn btn-info" onclick="verDoc('${cont}',${i})">👁️</button>
+                        <button class="btn btn-danger" onclick="eliminarDoc('${cont}',${i})">🗑️</button>
+                    </span>
+                </li>`).join('');
             document.getElementById('docModal').style.display = 'block';
         }
         
         function verDoc(cont, index) {
             let doc = documentos[cont][index];
             let win = window.open('', '_blank');
-            if (doc.tipo.includes('pdf')) {
-                win.document.write(`<iframe src="${doc.datos}" width="100%" height="100%"></iframe>`);
-            } else {
-                win.document.write(`<img src="${doc.datos}" style="max-width:100%;">`);
-            }
+            win.document.write(doc.tipo.includes('pdf') ? `<iframe src="${doc.datos}" width="100%" height="100%"></iframe>` : `<img src="${doc.datos}" style="max-width:100%;">`);
         }
         
         function eliminarDoc(cont, index) {
-            if (confirm('¿Eliminar este documento?')) {
-                documentos[cont].splice(index, 1);
-                if (documentos[cont].length === 0) delete documentos[cont];
-                guardarDocs();
-                verDocumentos();
-            }
+            if (confirm('¿Eliminar?')) { documentos[cont].splice(index, 1); if (documentos[cont].length === 0) delete documentos[cont]; guardarDocs(); verDocumentos(); }
         }
         
         function descargarDocumentos() {
             let cont = document.getElementById('docContainerSelect').value;
             if (!cont) { alert('Selecciona un contenedor'); return; }
-            
             let docs = documentos[cont] || [];
-            if (docs.length === 0) { alert('No hay documentos para descargar'); return; }
-            
-            docs.forEach((doc, i) => {
-                let a = document.createElement('a');
-                a.href = doc.datos;
-                a.download = `${cont}_${doc.nombre}`;
-                a.click();
-            });
+            if (docs.length === 0) { alert('No hay documentos'); return; }
+            docs.forEach(doc => { let a = document.createElement('a'); a.href = doc.datos; a.download = `${cont}_${doc.nombre}`; a.click(); });
         }
         
         function exportar() {
@@ -444,10 +351,7 @@
             let csv = "N°,Contenedor,Fecha Llegada,Estado,FOB (S/),Aduana (S/),Naviera (S/),Almacén (S/),Poggi (S/),Total (S/),FOB TOTAL (S/),IMPUESTOS (S/),GASTOS (S/),TOTAL GENERAL (S/)\n";
             itemsExport.forEach((item, i) => {
                 let total = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
-                let impuestos = item.aduana;
-                let gastos = item.naviera + item.almacen + item.poggi;
-                let totalGral = item.fob + impuestos + gastos;
-                csv += `${i+1},"${item.cont}","${item.fecha}","${item.estado}",${item.fob},${item.aduana},${item.naviera},${item.almacen},${item.poggi},${total.toFixed(2)},${item.fob.toFixed(2)},${impuestos.toFixed(2)},${gastos.toFixed(2)},${totalGral.toFixed(2)}\n`;
+                csv += `${i+1},"${item.cont}","${item.fecha}","${item.estado}",${item.fob},${item.aduana},${item.naviera},${item.almacen},${item.poggi},${total.toFixed(2)},${item.fob.toFixed(2)},${item.aduana.toFixed(2)},${(item.naviera+item.almacen+item.poggi).toFixed(2)},${(item.fob+item.aduana+item.naviera+item.almacen+item.poggi).toFixed(2)}\n`;
             });
             let blob = new Blob([csv], {type: 'text/csv'});
             let a = document.createElement('a');
@@ -456,12 +360,11 @@
             a.click();
         }
         
-        // Cerrar modal al hacer clic fuera
         window.onclick = function(event) {
-            let modal = document.getElementById('docModal');
-            if (event.target == modal) modal.style.display = 'none';
+            if (event.target == document.getElementById('docModal')) document.getElementById('docModal').style.display = 'none';
         }
         
+        // Carga inicial
         mostrar();
         llenarSelects();
     </script>
