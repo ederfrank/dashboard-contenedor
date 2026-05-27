@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Contenedores - Check Azul - En Soles</title>
+    <title>Dashboard de Contenedores - Check Azul - en Soles</title>
     <style>
         /* ============================================
            PALETAS DE COLORES
@@ -138,6 +138,7 @@
         .btn.info { border-color: var(--accent); color: var(--accent); }
         .btn.info:hover { background: var(--accent-soft); }
         .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+        .btn.active-filter { background: var(--accent); color: #fff; border-color: var(--accent); }
 
         .content { padding: 24px 28px 60px; display: grid; gap: 22px; }
 
@@ -188,7 +189,6 @@
         th:first-child, td:first-child { text-align: center; }
         tbody tr:hover td { background: var(--table-row-hover); }
         
-        /* Columnas especiales */
         .col-fob-total { background: rgba(99,102,241,0.12); font-weight: 700; }
         .col-impuestos { background: rgba(249,115,22,0.12); font-weight: 700; }
         .col-gastos { background: rgba(234,179,8,0.12); font-weight: 700; }
@@ -203,7 +203,6 @@
         .spacer { background: var(--panel-2); min-width: 20px; }
         .zero { color: var(--zero-text); }
 
-        /* Bolitas de estado */
         .estado-dot {
             display: inline-block; width: 10px; height: 10px;
             border-radius: 50%; margin-right: 6px; vertical-align: middle;
@@ -212,6 +211,15 @@
         .dot-aduana { background: #f97316; }
         .dot-liberado { background: #eab308; }
         .dot-entregado { background: #10b981; }
+
+        .estado-filtros { display: flex; gap: 6px; flex-wrap: wrap; margin-left: 10px; }
+        .estado-filtro-btn {
+            padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border);
+            background: var(--panel-2); color: var(--text-soft); cursor: pointer;
+            font-size: 11px; font-weight: 600; transition: all 0.15s;
+        }
+        .estado-filtro-btn:hover { border-color: var(--accent); color: var(--text); }
+        .estado-filtro-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -240,8 +248,8 @@
 <body>
     <header class="topbar">
         <div class="brand">
-            <h1>🚢 Dashboard de Contenedores - En Soles</h1>
-            <span class="sub">FOB · Aduana · Naviera · Almacén · Poggi</span>
+            <h1>🚢 Dashboard de Contenedores - Check Azul - en Soles</h1>
+            <span class="sub">Check Azul · FOB · Aduana · Naviera · Almacén · Poggi</span>
         </div>
         <div class="header-right">
             <div class="theme-picker">
@@ -270,6 +278,16 @@
         <div class="filter-group">
             <label>O escribe números</label>
             <input type="text" id="searchInput" placeholder="648, 655, 660" onkeyup="buscarManual()">
+        </div>
+        <div class="filter-group">
+            <label>Filtrar por estado</label>
+            <div class="estado-filtros" id="estadoFiltros">
+                <button class="estado-filtro-btn active" data-estado="todos" onclick="filtrarPorEstado('todos', this)">Todos</button>
+                <button class="estado-filtro-btn" data-estado="En tránsito" onclick="filtrarPorEstado('En tránsito', this)">⚫ En tránsito</button>
+                <button class="estado-filtro-btn" data-estado="En aduana" onclick="filtrarPorEstado('En aduana', this)">🟠 En aduana</button>
+                <button class="estado-filtro-btn" data-estado="Liberado" onclick="filtrarPorEstado('Liberado', this)">🟡 Liberado</button>
+                <button class="estado-filtro-btn" data-estado="Entregado" onclick="filtrarPorEstado('Entregado', this)">🟢 Entregado</button>
+            </div>
         </div>
         <button class="btn info" onclick="mostrarTodos()">🔄 Mostrar Todos</button>
     </section>
@@ -379,7 +397,8 @@
 
         let items = [...datosIniciales];
         let documentos = JSON.parse(localStorage.getItem('documentos')) || {};
-        let filtroActual = 'todos';
+        let filtroContenedor = 'todos';
+        let filtroEstado = 'todos';
         let theme = localStorage.getItem('dashboard-theme') || 'light';
 
         function guardar() { localStorage.setItem('misdatos', JSON.stringify(items)); }
@@ -397,9 +416,20 @@
         }
 
         function getFiltrados() {
-            if (filtroActual === 'todos') return items;
-            let nums = filtroActual.split(',').map(n => n.trim());
-            return items.filter(item => nums.includes(item.cont));
+            let resultado = items;
+            
+            // Filtrar por contenedor
+            if (filtroContenedor !== 'todos') {
+                let nums = filtroContenedor.split(',').map(n => n.trim());
+                resultado = resultado.filter(item => nums.includes(item.cont));
+            }
+            
+            // Filtrar por estado
+            if (filtroEstado !== 'todos') {
+                resultado = resultado.filter(item => item.estado === filtroEstado);
+            }
+            
+            return resultado;
         }
 
         function mostrar() {
@@ -440,7 +470,7 @@
                 </tr>`;
             });
             
-            document.getElementById('bodyTable').innerHTML = html || '<tr><td colspan="16" style="text-align:center;padding:20px;color:var(--text-soft);">No se encontraron contenedores.</td></tr>';
+            document.getElementById('bodyTable').innerHTML = html || '<tr><td colspan="16" style="text-align:center;padding:20px;color:var(--text-soft);">No se encontraron contenedores con estos filtros.</td></tr>';
             document.getElementById('badgeCount').textContent = itemsMostrar.length + ' contenedores';
             
             let granGastos = tn + tal + tp;
@@ -469,22 +499,32 @@
         }
 
         function filtrar() {
-            filtroActual = document.getElementById('filterSelect').value;
+            filtroContenedor = document.getElementById('filterSelect').value;
             document.getElementById('searchInput').value = '';
             mostrar();
         }
 
         function buscarManual() {
             let v = document.getElementById('searchInput').value.trim();
-            filtroActual = v === '' ? 'todos' : v;
+            filtroContenedor = v === '' ? 'todos' : v;
             document.getElementById('filterSelect').value = 'todos';
             mostrar();
         }
 
+        function filtrarPorEstado(estado, btn) {
+            filtroEstado = estado;
+            document.querySelectorAll('.estado-filtro-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            mostrar();
+        }
+
         function mostrarTodos() {
-            filtroActual = 'todos';
+            filtroContenedor = 'todos';
+            filtroEstado = 'todos';
             document.getElementById('filterSelect').value = 'todos';
             document.getElementById('searchInput').value = '';
+            document.querySelectorAll('.estado-filtro-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.estado-filtro-btn[data-estado="todos"]').classList.add('active');
             mostrar();
         }
 
