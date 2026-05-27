@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Contenedores - Check Azul - en Soles</title>
+    <!-- Librerías para PDF y Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         html[data-theme="indigo"] {
             --bg: #0b1020; --bg-2: #0f172a; --panel: #111a32; --panel-2: #18213d;
@@ -59,60 +63,30 @@
 
         html, body {
             background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
-            color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+            color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
             min-height: 100vh; transition: background 0.3s ease;
         }
 
         .topbar {
             display: flex; align-items: center; justify-content: space-between;
             padding: 14px 28px; border-bottom: 1px solid var(--border);
-            background: var(--panel); position: sticky; top: 0; z-index: 30;
-            gap: 16px; flex-wrap: wrap;
+            background: var(--panel); position: sticky; top: 0; z-index: 30; gap: 16px; flex-wrap: wrap;
         }
-        .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0.2px; }
+        .brand h1 { margin: 0; font-size: 18px; }
         .brand .sub { font-size: 11px; color: var(--text-soft); }
 
         .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-        .login-btn {
-            padding: 7px 14px; border-radius: 8px; border: 1px solid var(--accent);
-            background: var(--accent); color: #fff; cursor: pointer;
-            font-weight: 600; font-size: 12px; transition: all 0.15s;
-        }
+        .login-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; font-weight: 600; font-size: 12px; }
         .login-btn:hover { background: var(--accent-hover); }
-        .logout-btn {
-            padding: 7px 14px; border-radius: 8px; border: 1px solid var(--danger);
-            background: var(--danger); color: #fff; cursor: pointer;
-            font-weight: 600; font-size: 12px;
-        }
-        .user-badge {
-            padding: 5px 10px; border-radius: 999px;
-            background: var(--success); color: #fff; font-size: 11px; font-weight: 600;
-        }
+        .logout-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--danger); background: var(--danger); color: #fff; cursor: pointer; font-weight: 600; font-size: 12px; }
+        .user-badge { padding: 5px 10px; border-radius: 999px; background: var(--success); color: #fff; font-size: 11px; font-weight: 600; }
 
         .theme-picker { position: relative; }
-        .theme-btn {
-            display: flex; align-items: center; gap: 6px;
-            background: var(--panel-2); border: 1px solid var(--border);
-            color: var(--text); padding: 7px 12px; border-radius: 8px;
-            cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.15s;
-        }
+        .theme-btn { display: flex; align-items: center; gap: 6px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; }
         .theme-btn:hover { border-color: var(--accent); }
-        .theme-menu {
-            position: absolute; right: 0; top: calc(100% + 8px);
-            background: var(--panel); border: 1px solid var(--border);
-            border-radius: 12px; padding: 6px;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.4); min-width: 200px;
-            z-index: 50; display: flex; flex-direction: column; gap: 2px;
-        }
+        .theme-menu { position: absolute; right: 0; top: calc(100% + 8px); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,0.4); min-width: 200px; z-index: 50; display: flex; flex-direction: column; gap: 2px; }
         .theme-menu.hidden { display: none; }
-        .theme-option {
-            display: flex; align-items: center; gap: 10px;
-            background: transparent; border: none; color: var(--text);
-            padding: 8px 10px; border-radius: 8px; cursor: pointer;
-            text-align: left; font-size: 12px; font-weight: 500; transition: background 0.15s;
-        }
+        .theme-option { display: flex; align-items: center; gap: 10px; background: transparent; border: none; color: var(--text); padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 500; }
         .theme-option:hover { background: var(--panel-2); }
         .swatch { width: 16px; height: 16px; border-radius: 5px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
         .swatch-indigo { background: linear-gradient(135deg, #0b1020, #6366f1); }
@@ -122,23 +96,11 @@
         .swatch-sunset { background: linear-gradient(135deg, #1c1917, #f97316); }
         .swatch-purple { background: linear-gradient(135deg, #1e0b2e, #a855f7); }
 
-        .filters {
-            display: flex; flex-wrap: wrap; align-items: end; gap: 12px;
-            padding: 12px 28px; background: var(--panel); border-bottom: 1px solid var(--border);
-            position: sticky; top: 60px; z-index: 25;
-        }
+        .filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; padding: 12px 28px; background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 60px; z-index: 25; }
         .filter-group { display: flex; flex-direction: column; gap: 4px; }
         .filter-group label { font-size: 10px; text-transform: uppercase; color: var(--text-soft); letter-spacing: 0.5px; }
-        .filter-group input[type="text"], .filter-group select {
-            background: var(--panel-2); border: 1px solid var(--border);
-            color: var(--text); padding: 6px 8px; border-radius: 6px; font-size: 13px;
-        }
-        .btn {
-            padding: 7px 12px; border-radius: 6px; border: 1px solid var(--border);
-            background: var(--panel-2); color: var(--text); cursor: pointer;
-            font-weight: 600; font-size: 12px; transition: all 0.15s;
-            display: inline-flex; align-items: center; gap: 4px;
-        }
+        .filter-group input[type="text"], .filter-group select { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); padding: 6px 8px; border-radius: 6px; font-size: 13px; }
+        .btn { padding: 7px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel-2); color: var(--text); cursor: pointer; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s; }
         .btn:hover { transform: translateY(-1px); }
         .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
         .btn.primary:hover { background: var(--accent-hover); }
@@ -146,152 +108,76 @@
         .btn.info { border-color: var(--accent); color: var(--accent); }
         .btn.info:hover { background: var(--accent-soft); }
         .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .content { padding: 16px 28px 60px; display: grid; gap: 16px; }
-
         .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .kpi {
-            background: var(--panel); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 14px;
-            box-shadow: var(--shadow); position: relative; overflow: hidden;
-        }
+        .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
         .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
         .kpi:nth-child(1)::before { background: var(--accent); }
         .kpi:nth-child(2)::before { background: #f97316; }
         .kpi:nth-child(3)::before { background: #eab308; }
         .kpi:nth-child(4)::before { background: var(--success); }
-        .kpi-label { font-size: 11px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-value { font-size: 22px; font-weight: 700; margin-top: 6px; line-height: 1.1; }
+        .kpi-label { font-size: 11px; color: var(--text-soft); text-transform: uppercase; }
+        .kpi-value { font-size: 22px; font-weight: 700; margin-top: 6px; }
         .kpi-sub { font-size: 11px; color: var(--text-soft); margin-top: 3px; }
 
-        .card {
-            background: var(--panel); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 14px 16px 18px; box-shadow: var(--shadow);
-        }
-        .card-head {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
-        }
-        .card-head h2 { margin: 0; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
-        .badge {
-            background: var(--panel-2); border: 1px solid var(--border);
-            color: var(--text-soft); padding: 3px 8px; border-radius: 999px; font-size: 11px;
-        }
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px 18px; box-shadow: var(--shadow); }
+        .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .card-head h2 { margin: 0; font-size: 15px; font-weight: 600; text-transform: uppercase; }
+        .badge { background: var(--panel-2); border: 1px solid var(--border); color: var(--text-soft); padding: 3px 8px; border-radius: 999px; font-size: 11px; }
 
-        .table-wrap {
-            overflow-x: auto; border-radius: 8px;
-            border: 1px solid var(--border); background: var(--panel);
-            max-height: 65vh; overflow-y: auto;
-        }
+        .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); max-height: 65vh; overflow-y: auto; }
         table { border-collapse: collapse; font-size: 11px; width: auto; min-width: 100%; }
         thead { position: sticky; top: 0; z-index: 10; }
-        th, td {
-            padding: 5px 8px; border-right: 1px solid var(--border);
-            border-bottom: 1px solid var(--border); text-align: center;
-            white-space: nowrap; line-height: 1.3;
-        }
-        th {
-            background: var(--th-bg); color: var(--th-text);
-            font-weight: 700; font-size: 11px;
-            letter-spacing: 0.4px;
-        }
-        th:first-child, td:first-child { text-align: center; }
+        th, td { padding: 5px 8px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); text-align: center; white-space: nowrap; line-height: 1.3; }
+        th { background: var(--th-bg); color: var(--th-text); font-weight: 700; font-size: 11px; }
         tbody tr:hover td { background: var(--table-row-hover); }
-        
         .col-fob-total { background: rgba(99,102,241,0.12); font-weight: 700; }
         .col-impuestos { background: rgba(249,115,22,0.12); font-weight: 700; }
         .col-gastos { background: rgba(234,179,8,0.12); font-weight: 700; }
         .col-total-gral { background: rgba(16,185,129,0.12); font-weight: 700; }
-        
         th.col-fob-total { background: #6366f1; color: #fff; }
         th.col-impuestos { background: #f97316; color: #fff; }
         th.col-gastos { background: #eab308; color: #000; }
         th.col-total-gral { background: #10b981; color: #fff; }
-        
         .row-total { font-weight: 700; background: var(--table-col-total); }
         .spacer { background: var(--panel-2); min-width: 15px; }
         .zero { color: var(--zero-text); }
 
-        .estado-dot {
-            display: inline-block; width: 8px; height: 8px;
-            border-radius: 50%; margin-right: 4px; vertical-align: middle;
-        }
-        .dot-transito { background: #000000; }
+        .estado-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+        .dot-transito { background: #000; }
         .dot-aduana { background: #f97316; }
         .dot-liberado { background: #eab308; }
         .dot-entregado { background: #10b981; }
 
         .estado-filtros { display: flex; gap: 4px; flex-wrap: wrap; }
-        .estado-filtro-btn {
-            padding: 4px 8px; border-radius: 999px; border: 1px solid var(--border);
-            background: var(--panel-2); color: var(--text-soft); cursor: pointer;
-            font-size: 10px; font-weight: 600; transition: all 0.15s;
-        }
-        .estado-filtro-btn:hover { border-color: var(--accent); color: var(--text); }
+        .estado-filtro-btn { padding: 4px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel-2); color: var(--text-soft); cursor: pointer; font-size: 10px; font-weight: 600; }
+        .estado-filtro-btn:hover { border-color: var(--accent); }
         .estado-filtro-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .readonly-input { background: var(--panel-2) !important; color: var(--text) !important; border: 1px solid var(--border) !important; cursor: default; }
 
-        .readonly-input {
-            background: var(--panel-2) !important;
-            color: var(--text) !important;
-            border: 1px solid var(--border) !important;
-            cursor: default;
-        }
-
-        /* Clip para documentos */
-        .clip-btn {
-            background: transparent; border: none; cursor: pointer;
-            font-size: 16px; padding: 2px 5px; border-radius: 4px;
-            transition: all 0.15s; position: relative;
-        }
+        .clip-btn { background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 2px 5px; border-radius: 4px; position: relative; }
         .clip-btn:hover { background: var(--accent-soft); transform: scale(1.2); }
         .clip-btn.has-docs { color: var(--accent); }
         .clip-btn.no-docs { color: var(--text-soft); opacity: 0.4; }
-        .clip-tooltip {
-            display: none; position: absolute; bottom: 100%; left: 50%;
-            transform: translateX(-50%); background: var(--panel);
-            border: 1px solid var(--border); border-radius: 6px;
-            padding: 4px 8px; font-size: 10px; white-space: nowrap;
-            color: var(--text); z-index: 5;
-        }
+        .clip-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 10px; white-space: nowrap; color: var(--text); z-index: 5; }
         .clip-btn:hover .clip-tooltip { display: block; }
 
-        .login-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 1000;
-            align-items: center; justify-content: center;
-        }
+        .login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
         .login-overlay.active { display: flex; }
-        .login-box {
-            background: var(--panel); padding: 25px; border-radius: var(--radius);
-            text-align: center; border: 1px solid var(--border);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5); width: 90%; max-width: 360px;
-        }
+        .login-box { background: var(--panel); padding: 25px; border-radius: var(--radius); text-align: center; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.5); width: 90%; max-width: 360px; }
         .login-box h2 { margin-bottom: 15px; color: var(--text); font-size: 18px; }
-        .login-box input {
-            width: 100%; padding: 10px; margin: 8px 0;
-            border: 1px solid var(--border); border-radius: 8px;
-            background: var(--panel-2); color: var(--text); font-size: 15px; text-align: center;
-        }
+        .login-box input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); color: var(--text); font-size: 15px; text-align: center; }
         .login-box .btn { width: 100%; margin-top: 8px; }
         .login-error { color: var(--danger); font-size: 12px; margin-top: 6px; display: none; }
 
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
-        .modal-content {
-            background: var(--panel); padding: 25px; width: 90%; max-width: 650px;
-            border-radius: var(--radius); max-height: 80vh; overflow-y: auto;
-            border: 1px solid var(--border);
-        }
+        .modal-content { background: var(--panel); padding: 25px; width: 90%; max-width: 650px; border-radius: var(--radius); max-height: 80vh; overflow-y: auto; border: 1px solid var(--border); }
         .modal-header { font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: var(--text); }
         .file-list { list-style: none; padding: 0; }
-        .file-list li {
-            padding: 8px; border: 1px solid var(--border); margin: 4px 0;
-            border-radius: 5px; display: flex; justify-content: space-between; align-items: center;
-            color: var(--text); font-size: 13px;
-        }
+        .file-list li { padding: 8px; border: 1px solid var(--border); margin: 4px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; color: var(--text); font-size: 13px; }
         .close { float: right; font-size: 22px; cursor: pointer; color: var(--text); }
         .close:hover { color: var(--danger); }
 
@@ -307,7 +193,7 @@
             <input type="password" id="passwordInput" placeholder="••••••••" onkeypress="if(event.key==='Enter')verificarPassword()">
             <button class="btn primary" onclick="verificarPassword()">Ingresar</button>
             <p class="login-error" id="loginError">Contraseña incorrecta</p>
-            <button class="btn" style="margin-top:6px;background:transparent;border-color:var(--border);" onclick="cerrarLogin()">Solo ver (sin editar)</button>
+            <button class="btn" style="margin-top:6px;background:transparent;border-color:var(--border);" onclick="cerrarLogin()">Solo ver</button>
         </div>
     </div>
 
@@ -321,9 +207,7 @@
             <button id="btnLogin" class="login-btn" onclick="mostrarLogin()">🔑 Ingresar</button>
             <button id="btnLogout" class="logout-btn" style="display:none;" onclick="cerrarSesion()">Salir</button>
             <div class="theme-picker">
-                <button class="theme-btn" id="themeToggle" title="Cambiar paleta">
-                    <span>🎨</span> <span id="themeLabel">Claro</span>
-                </button>
+                <button class="theme-btn" id="themeToggle"><span>🎨</span> <span id="themeLabel">Claro</span></button>
                 <div class="theme-menu hidden" id="themeMenu">
                     <button class="theme-option" data-theme="indigo"><span class="swatch swatch-indigo"></span>Indigo Oscuro</button>
                     <button class="theme-option" data-theme="celeste"><span class="swatch swatch-celeste"></span>Celeste Marino</button>
@@ -337,18 +221,9 @@
     </header>
 
     <section class="filters">
-        <div class="filter-group">
-            <label>Contenedor</label>
-            <select id="filterSelect" onchange="filtrar()">
-                <option value="todos">📋 Todos</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>Buscar</label>
-            <input type="text" id="searchInput" placeholder="648, 655" onkeyup="buscarManual()" style="width:120px;">
-        </div>
-        <div class="filter-group">
-            <label>Estado</label>
+        <div class="filter-group"><label>Contenedor</label><select id="filterSelect" onchange="filtrar()"><option value="todos">📋 Todos</option></select></div>
+        <div class="filter-group"><label>Buscar</label><input type="text" id="searchInput" placeholder="648, 655" onkeyup="buscarManual()" style="width:120px;"></div>
+        <div class="filter-group"><label>Estado</label>
             <div class="estado-filtros" id="estadoFiltros">
                 <button class="estado-filtro-btn active" data-estado="todos" onclick="filtrarPorEstado('todos', this)">Todos</button>
                 <button class="estado-filtro-btn" data-estado="En tránsito" onclick="filtrarPorEstado('En tránsito', this)">⚫ Tránsito</button>
@@ -369,23 +244,16 @@
         </section>
 
         <section class="card">
-            <div class="card-head">
-                <h2>📋 Registro de Contenedores</h2>
-                <span class="badge" id="badgeCount">45 contenedores</span>
-            </div>
+            <div class="card-head"><h2>📋 Registro de Contenedores</h2><span class="badge" id="badgeCount">45 contenedores</span></div>
             <div class="table-wrap">
-                <table>
+                <table id="mainTable">
                     <thead>
                         <tr>
-                            <th>Docs</th>
-                            <th>N°</th><th>Contenedor</th><th>Fecha</th><th>Estado</th>
+                            <th>Docs</th><th>N°</th><th>Contenedor</th><th>Fecha</th><th>Estado</th>
                             <th>FOB (S/)</th><th>Aduana (S/)</th><th>Naviera (S/)</th><th>Almacén (S/)</th><th>Poggi (S/)</th>
                             <th>Total (S/)</th><th class="spacer"></th>
-                            <th class="col-fob-total">FOB TOTAL</th>
-                            <th class="col-impuestos">IMPUESTOS</th>
-                            <th class="col-gastos">GASTOS</th>
-                            <th class="col-total-gral">TOTAL GRAL</th>
-                            <th>Acción</th>
+                            <th class="col-fob-total">FOB TOTAL</th><th class="col-impuestos">IMPUESTOS</th>
+                            <th class="col-gastos">GASTOS</th><th class="col-total-gral">TOTAL GRAL</th><th>Acción</th>
                         </tr>
                     </thead>
                     <tbody id="bodyTable"></tbody>
@@ -394,20 +262,18 @@
             <div id="adminButtons" style="margin-top:10px; display:none; gap:6px; flex-wrap:wrap;">
                 <button class="btn primary" onclick="addRow()">➕ Agregar</button>
                 <button class="btn success" onclick="document.getElementById('docFile').click()">📤 Adjuntar Doc</button>
-                <select id="docContainerSelect" style="padding:6px;border-radius:6px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);font-size:12px;">
-                    <option value="">Seleccionar contenedor</option>
-                </select>
+                <select id="docContainerSelect" style="padding:6px;border-radius:6px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);font-size:12px;"><option value="">Seleccionar contenedor</option></select>
                 <button class="btn info" onclick="verDocumentos()">👁️ Ver Docs</button>
-                <button class="btn" onclick="descargarDocumentos()">📥 Descargar</button>
-                <button class="btn" onclick="exportar()">📊 Excel</button>
+                <button class="btn" onclick="descargarDocumentos()">📥 Descargar Docs</button>
+                <button class="btn" onclick="exportarExcel()">📊 Excel</button>
+                <button class="btn" onclick="exportarPDF()">📄 PDF</button>
             </div>
             <div id="viewerButtons" style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-                <select id="docContainerSelectViewer" style="padding:6px;border-radius:6px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);font-size:12px;">
-                    <option value="">Seleccionar contenedor</option>
-                </select>
+                <select id="docContainerSelectViewer" style="padding:6px;border-radius:6px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);font-size:12px;"><option value="">Seleccionar contenedor</option></select>
                 <button class="btn info" onclick="verDocumentosViewer()">👁️ Ver Docs</button>
-                <button class="btn" onclick="descargarDocumentosViewer()">📥 Descargar</button>
-                <button class="btn" onclick="exportar()">📊 Excel</button>
+                <button class="btn" onclick="descargarDocumentosViewer()">📥 Descargar Docs</button>
+                <button class="btn" onclick="exportarExcel()">📊 Excel</button>
+                <button class="btn" onclick="exportarPDF()">📄 PDF</button>
             </div>
             <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="adjuntarDocumento()">
         </section>
@@ -422,11 +288,8 @@
     </div>
 
     <script>
-        // ⚠️ CAMBIA ESTA CONTRASEÑA ⚠️
         const ADMIN_PASSWORD = 'checkazul2026';
-        
         const THEMES = { indigo:'Indigo Oscuro', celeste:'Celeste Marino', light:'Claro', emerald:'Verde Esmeralda', sunset:'Naranja Atardecer', purple:'Púrpura Real' };
-        
         let esAdmin = false;
         
         const datosIniciales = [
@@ -479,317 +342,162 @@
 
         let items = [...datosIniciales];
         let documentos = JSON.parse(localStorage.getItem('documentos')) || {};
-        let filtroContenedor = 'todos';
-        let filtroEstado = 'todos';
-        let theme = localStorage.getItem('dashboard-theme') || 'light';
+        let filtroContenedor = 'todos', filtroEstado = 'todos', theme = localStorage.getItem('dashboard-theme') || 'light';
 
         function guardar() { localStorage.setItem('misdatos', JSON.stringify(items)); }
         function guardarDocs() { localStorage.setItem('documentos', JSON.stringify(documentos)); }
-        
         function formatNumber(v) { return v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
         function formatSoles(v) { return 'S/ ' + formatNumber(v); }
-
-        function getDotClass(estado) {
-            if (estado === 'En tránsito') return 'dot-transito';
-            if (estado === 'En aduana') return 'dot-aduana';
-            if (estado === 'Liberado') return 'dot-liberado';
-            if (estado === 'Entregado') return 'dot-entregado';
-            return '';
-        }
+        function getDotClass(e) { return e==='En tránsito'?'dot-transito':e==='En aduana'?'dot-aduana':e==='Liberado'?'dot-liberado':e==='Entregado'?'dot-entregado':''; }
 
         function getFiltrados() {
-            let resultado = items;
-            if (filtroContenedor !== 'todos') {
-                let nums = filtroContenedor.split(',').map(n => n.trim());
-                resultado = resultado.filter(item => nums.includes(item.cont));
-            }
-            if (filtroEstado !== 'todos') {
-                resultado = resultado.filter(item => item.estado === filtroEstado);
-            }
-            return resultado;
+            let r = items;
+            if (filtroContenedor !== 'todos') { let ns = filtroContenedor.split(',').map(n=>n.trim()); r = r.filter(i=>ns.includes(i.cont)); }
+            if (filtroEstado !== 'todos') r = r.filter(i=>i.estado===filtroEstado);
+            return r;
         }
 
         function actualizarUI() {
-            if (esAdmin) {
-                document.getElementById('adminButtons').style.display = 'flex';
-                document.getElementById('viewerButtons').style.display = 'none';
-                document.getElementById('userBadge').style.display = 'inline-block';
-                document.getElementById('btnLogin').style.display = 'none';
-                document.getElementById('btnLogout').style.display = 'inline-block';
-            } else {
-                document.getElementById('adminButtons').style.display = 'none';
-                document.getElementById('viewerButtons').style.display = 'flex';
-                document.getElementById('userBadge').style.display = 'none';
-                document.getElementById('btnLogin').style.display = 'inline-block';
-                document.getElementById('btnLogout').style.display = 'none';
-            }
-            mostrar();
-            llenarSelects();
-        }
-
-        function mostrar() {
-            let itemsMostrar = getFiltrados();
-            let html = '';
-            let tf = 0, ta = 0, tn = 0, tal = 0, tp = 0;
-            
-            itemsMostrar.forEach((item, i) => {
-                let totalFila = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
-                let imp = item.aduana, gas = item.naviera + item.almacen + item.poggi;
-                let tgral = item.fob + imp + gas;
-                tf += item.fob; ta += item.aduana; tn += item.naviera; tal += item.almacen; tp += item.poggi;
-                let num = items.findIndex(it => it.id === item.id) + 1;
-                let dotClass = getDotClass(item.estado);
-                let disabledAttr = esAdmin ? '' : 'disabled';
-                let inputClass = esAdmin ? '' : 'readonly-input';
-                let docsCont = documentos[item.cont] || [];
-                let tieneDocs = docsCont.length > 0;
-                
-                html += `<tr>
-                    <td>
-                        <button class="clip-btn ${tieneDocs ? 'has-docs' : 'no-docs'}" 
-                            onclick="verDocumentosDirecto('${item.cont}')" 
-                            title="${tieneDocs ? docsCont.length + ' documento(s)' : 'Sin documentos'}">
-                            📎
-                            <span class="clip-tooltip">${tieneDocs ? docsCont.length + ' doc(s)' : 'Sin docs'}</span>
-                        </button>
-                    </td>
-                    <td>${num}</td>
-                    <td><input value="${item.cont}" ${disabledAttr} class="${inputClass}" style="width:65px;text-align:center;padding:3px;border-radius:4px;font-size:11px;"></td>
-                    <td><input type="date" value="${item.fecha}" ${disabledAttr} class="${inputClass}" style="padding:3px;border-radius:4px;font-size:11px;"></td>
-                    <td style="text-align:left;padding-left:8px;">
-                        <span class="estado-dot ${dotClass}"></span>
-                        <select ${disabledAttr} class="${inputClass}" style="padding:3px;border-radius:4px;font-size:11px;">
-                            ${['En tránsito','En aduana','Liberado','Entregado'].map(e=>`<option ${item.estado==e?'selected':''}>${e}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td><input type="text" value="${formatNumber(item.fob)}" ${disabledAttr} class="${inputClass}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
-                    <td><input type="text" value="${formatNumber(item.aduana)}" ${disabledAttr} class="${inputClass}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
-                    <td><input type="text" value="${formatNumber(item.naviera)}" ${disabledAttr} class="${inputClass}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
-                    <td><input type="text" value="${formatNumber(item.almacen)}" ${disabledAttr} class="${inputClass}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
-                    <td><input type="text" value="${formatNumber(item.poggi)}" ${disabledAttr} class="${inputClass}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
-                    <td class="row-total">${formatSoles(totalFila)}</td>
-                    <td class="spacer"></td>
-                    <td class="col-fob-total">${formatSoles(item.fob)}</td>
-                    <td class="col-impuestos">${formatSoles(imp)}</td>
-                    <td class="col-gastos">${formatSoles(gas)}</td>
-                    <td class="col-total-gral">${formatSoles(tgral)}</td>
-                    <td>${esAdmin ? `<button class="btn danger" onclick="borrar(${item.id})" style="padding:3px 6px;font-size:11px;">🗑️</button>` : '🔒'}</td>
-                </tr>`;
-            });
-            
-            document.getElementById('bodyTable').innerHTML = html || '<tr><td colspan="17" style="text-align:center;padding:20px;color:var(--text-soft);">No se encontraron contenedores.</td></tr>';
-            document.getElementById('badgeCount').textContent = itemsMostrar.length + ' contenedores';
-            
-            let granGastos = tn + tal + tp;
-            let granTotal = tf + ta + granGastos;
-            document.getElementById('kpiFOB').textContent = formatSoles(tf);
-            document.getElementById('kpiImpuestos').textContent = formatSoles(ta);
-            document.getElementById('kpiGastos').textContent = formatSoles(granGastos);
-            document.getElementById('kpiTotal').textContent = formatSoles(granTotal);
-            
-            guardar();
-        }
-
-        function cambiar(id, campo, valor) {
-            if (!esAdmin) return;
-            let item = items.find(i => i.id === id);
-            if (item) { item[campo] = valor; mostrar(); llenarSelects(); }
-        }
-
-        function addRow() {
-            if (!esAdmin) return;
-            let maxId = items.length ? Math.max(...items.map(i => i.id)) : 0;
-            items.push({id:maxId+1, cont:'', fecha:'', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0});
+            document.getElementById('adminButtons').style.display = esAdmin ? 'flex' : 'none';
+            document.getElementById('viewerButtons').style.display = esAdmin ? 'none' : 'flex';
+            document.getElementById('userBadge').style.display = esAdmin ? 'inline-block' : 'none';
+            document.getElementById('btnLogin').style.display = esAdmin ? 'none' : 'inline-block';
+            document.getElementById('btnLogout').style.display = esAdmin ? 'inline-block' : 'none';
             mostrar(); llenarSelects();
         }
 
-        function borrar(id) {
-            if (!esAdmin) return;
-            if (confirm('¿Eliminar?')) { items = items.filter(i => i.id !== id); mostrar(); llenarSelects(); }
+        function mostrar() {
+            let itemsMostrar = getFiltrados(), html = '', tf=0,ta=0,tn=0,tal=0,tp=0;
+            itemsMostrar.forEach((item,i) => {
+                let tot = item.fob+item.aduana+item.naviera+item.almacen+item.poggi, imp=item.aduana, gas=item.naviera+item.almacen+item.poggi, tgral=item.fob+imp+gas;
+                tf+=item.fob; ta+=item.aduana; tn+=item.naviera; tal+=item.almacen; tp+=item.poggi;
+                let num = items.findIndex(it=>it.id===item.id)+1, d=esAdmin?'':'disabled', c=esAdmin?'':'readonly-input';
+                let docsCont = documentos[item.cont]||[], tieneDocs=docsCont.length>0;
+                html += `<tr>
+                    <td><button class="clip-btn ${tieneDocs?'has-docs':'no-docs'}" onclick="verDocumentosDirecto('${item.cont}')" title="${tieneDocs?docsCont.length+' doc(s)':'Sin docs'}">📎<span class="clip-tooltip">${tieneDocs?docsCont.length+' doc(s)':'Sin docs'}</span></button></td>
+                    <td>${num}</td>
+                    <td><input value="${item.cont}" ${d} class="${c}" style="width:65px;text-align:center;padding:3px;border-radius:4px;font-size:11px;"></td>
+                    <td><input type="date" value="${item.fecha}" ${d} class="${c}" style="padding:3px;border-radius:4px;font-size:11px;"></td>
+                    <td style="text-align:left;padding-left:8px;"><span class="estado-dot ${getDotClass(item.estado)}"></span><select ${d} class="${c}" style="padding:3px;border-radius:4px;font-size:11px;">${['En tránsito','En aduana','Liberado','Entregado'].map(e=>`<option ${item.estado==e?'selected':''}>${e}</option>`).join('')}</select></td>
+                    <td><input type="text" value="${formatNumber(item.fob)}" ${d} class="${c}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
+                    <td><input type="text" value="${formatNumber(item.aduana)}" ${d} class="${c}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
+                    <td><input type="text" value="${formatNumber(item.naviera)}" ${d} class="${c}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
+                    <td><input type="text" value="${formatNumber(item.almacen)}" ${d} class="${c}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
+                    <td><input type="text" value="${formatNumber(item.poggi)}" ${d} class="${c}" style="text-align:right;width:100px;padding:3px;border-radius:4px;font-size:11px;"></td>
+                    <td class="row-total">${formatSoles(tot)}</td><td class="spacer"></td>
+                    <td class="col-fob-total">${formatSoles(item.fob)}</td><td class="col-impuestos">${formatSoles(imp)}</td>
+                    <td class="col-gastos">${formatSoles(gas)}</td><td class="col-total-gral">${formatSoles(tgral)}</td>
+                    <td>${esAdmin?`<button class="btn danger" onclick="borrar(${item.id})" style="padding:3px 6px;font-size:11px;">🗑️</button>`:'🔒'}</td></tr>`;
+            });
+            document.getElementById('bodyTable').innerHTML = html || '<tr><td colspan="17" style="text-align:center;padding:20px;color:var(--text-soft);">No se encontraron contenedores.</td></tr>';
+            document.getElementById('badgeCount').textContent = itemsMostrar.length + ' contenedores';
+            let gg=tn+tal+tp, gt=tf+ta+gg;
+            document.getElementById('kpiFOB').textContent=formatSoles(tf); document.getElementById('kpiImpuestos').textContent=formatSoles(ta);
+            document.getElementById('kpiGastos').textContent=formatSoles(gg); document.getElementById('kpiTotal').textContent=formatSoles(gt);
+            guardar();
         }
 
-        function filtrar() {
-            filtroContenedor = document.getElementById('filterSelect').value;
-            document.getElementById('searchInput').value = '';
-            mostrar();
-        }
-
-        function buscarManual() {
-            let v = document.getElementById('searchInput').value.trim();
-            filtroContenedor = v === '' ? 'todos' : v;
-            document.getElementById('filterSelect').value = 'todos';
-            mostrar();
-        }
-
-        function filtrarPorEstado(estado, btn) {
-            filtroEstado = estado;
-            document.querySelectorAll('.estado-filtro-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            mostrar();
-        }
-
-        function mostrarTodos() {
-            filtroContenedor = 'todos';
-            filtroEstado = 'todos';
-            document.getElementById('filterSelect').value = 'todos';
-            document.getElementById('searchInput').value = '';
-            document.querySelectorAll('.estado-filtro-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('.estado-filtro-btn[data-estado="todos"]').classList.add('active');
-            mostrar();
-        }
+        function cambiar(id,c,v) { if(!esAdmin)return; let it=items.find(i=>i.id===id); if(it){it[c]=v;mostrar();llenarSelects();} }
+        function addRow() { if(!esAdmin)return; let mid=items.length?Math.max(...items.map(i=>i.id)):0; items.push({id:mid+1,cont:'',fecha:'',estado:'En tránsito',fob:0,aduana:0,naviera:0,almacen:0,poggi:0}); mostrar();llenarSelects(); }
+        function borrar(id) { if(!esAdmin)return; if(confirm('¿Eliminar?')){items=items.filter(i=>i.id!==id);mostrar();llenarSelects();} }
+        function filtrar() { filtroContenedor=document.getElementById('filterSelect').value; document.getElementById('searchInput').value=''; mostrar(); }
+        function buscarManual() { let v=document.getElementById('searchInput').value.trim(); filtroContenedor=v===''?'todos':v; document.getElementById('filterSelect').value='todos'; mostrar(); }
+        function filtrarPorEstado(e,b) { filtroEstado=e; document.querySelectorAll('.estado-filtro-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); mostrar(); }
+        function mostrarTodos() { filtroContenedor='todos'; filtroEstado='todos'; document.getElementById('filterSelect').value='todos'; document.getElementById('searchInput').value=''; document.querySelectorAll('.estado-filtro-btn').forEach(x=>x.classList.remove('active')); document.querySelector('.estado-filtro-btn[data-estado="todos"]').classList.add('active'); mostrar(); }
 
         function llenarSelects() {
-            let fs = document.getElementById('filterSelect');
-            let ds = document.getElementById('docContainerSelect');
-            let dsv = document.getElementById('docContainerSelectViewer');
-            fs.innerHTML = '<option value="todos">📋 Todos</option>';
-            ds.innerHTML = '<option value="">Seleccionar contenedor</option>';
-            if (dsv) dsv.innerHTML = '<option value="">Seleccionar contenedor</option>';
-            items.forEach(item => {
-                if (item.cont) {
-                    fs.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
-                    ds.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
-                    if (dsv) dsv.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
-                }
-            });
+            let fs=document.getElementById('filterSelect'), ds=document.getElementById('docContainerSelect'), dsv=document.getElementById('docContainerSelectViewer');
+            fs.innerHTML='<option value="todos">📋 Todos</option>'; ds.innerHTML='<option value="">Seleccionar contenedor</option>';
+            if(dsv) dsv.innerHTML='<option value="">Seleccionar contenedor</option>';
+            items.forEach(i=>{if(i.cont){fs.innerHTML+=`<option value="${i.cont}">${i.cont}</option>`;ds.innerHTML+=`<option value="${i.cont}">${i.cont}</option>`;if(dsv)dsv.innerHTML+=`<option value="${i.cont}">${i.cont}</option>`;}});
         }
 
         function verDocumentosDirecto(cont) {
-            document.getElementById('modalContName').textContent = cont;
-            let docs = documentos[cont] || [];
-            document.getElementById('fileList').innerHTML = docs.length === 0 ? '<li style="color:var(--text-soft);">No hay documentos para este contenedor.</li>' : docs.map((d,i) => `
-                <li><span>${d.tipo.includes('pdf')?'📄':'🖼️'} ${d.nombre} (${d.fecha})</span>
-                <span>
-                    <button class="btn info" onclick="verDoc('${cont}',${i})" style="padding:3px 6px;font-size:11px;">👁️</button>
-                    ${esAdmin ? `<button class="btn danger" onclick="eliminarDoc('${cont}',${i})" style="padding:3px 6px;font-size:11px;">🗑️</button>` : ''}
-                </span></li>`).join('');
+            document.getElementById('modalContName').textContent=cont;
+            let docs=documentos[cont]||[];
+            document.getElementById('fileList').innerHTML=docs.length===0?'<li style="color:var(--text-soft);">No hay documentos.</li>':docs.map((d,i)=>`<li><span>${d.tipo.includes('pdf')?'📄':'🖼️'} ${d.nombre} (${d.fecha})</span><span><button class="btn info" onclick="verDoc('${cont}',${i})" style="padding:3px 6px;font-size:11px;">👁️</button>${esAdmin?`<button class="btn danger" onclick="eliminarDoc('${cont}',${i})" style="padding:3px 6px;font-size:11px;">🗑️</button>`:''}</span></li>`).join('');
             document.getElementById('docModal').classList.add('active');
         }
 
-        // ===== SISTEMA DE LOGIN =====
-        function mostrarLogin() {
-            document.getElementById('loginOverlay').classList.add('active');
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('loginError').style.display = 'none';
-            setTimeout(() => document.getElementById('passwordInput').focus(), 100);
-        }
+        function mostrarLogin() { document.getElementById('loginOverlay').classList.add('active'); document.getElementById('passwordInput').value=''; document.getElementById('loginError').style.display='none'; setTimeout(()=>document.getElementById('passwordInput').focus(),100); }
+        function cerrarLogin() { document.getElementById('loginOverlay').classList.remove('active'); }
+        function verificarPassword() { if(document.getElementById('passwordInput').value===ADMIN_PASSWORD){esAdmin=true;document.getElementById('loginOverlay').classList.remove('active');actualizarUI();}else{document.getElementById('loginError').style.display='block';document.getElementById('passwordInput').value='';} }
+        function cerrarSesion() { esAdmin=false; actualizarUI(); }
+        function adjuntarDocumento() { if(!esAdmin){alert('Solo admin');return;} let cont=document.getElementById('docContainerSelect').value, file=document.getElementById('docFile').files[0]; if(!cont||!file){alert('Selecciona contenedor y archivo');return;} let reader=new FileReader(); reader.onload=function(e){if(!documentos[cont])documentos[cont]=[];documentos[cont].push({nombre:file.name,tipo:file.type,datos:e.target.result,fecha:new Date().toLocaleString()});guardarDocs();alert('✅ Documento adjuntado');document.getElementById('docFile').value='';mostrar();}; reader.readAsDataURL(file); }
+        function verDocumentos() { let cont=document.getElementById('docContainerSelect').value; if(!cont){alert('Selecciona contenedor');return;} verDocumentosDirecto(cont); }
+        function verDocumentosViewer() { let cont=document.getElementById('docContainerSelectViewer').value; if(!cont){alert('Selecciona contenedor');return;} verDocumentosDirecto(cont); }
+        function verDoc(cont,i) { let doc=documentos[cont][i], w=window.open('','_blank'); w.document.write(doc.tipo.includes('pdf')?`<iframe src="${doc.datos}" width="100%" height="100%"></iframe>`:`<img src="${doc.datos}" style="max-width:100%;">`); }
+        function eliminarDoc(cont,i) { if(!esAdmin)return; if(confirm('¿Eliminar este documento?')){documentos[cont].splice(i,1);if(!documentos[cont].length)delete documentos[cont];guardarDocs();verDocumentosDirecto(cont);mostrar();} }
+        function descargarDocumentos() { let cont=document.getElementById('docContainerSelect').value; if(!cont){alert('Selecciona contenedor');return;} descargarDocsCont(cont); }
+        function descargarDocumentosViewer() { let cont=document.getElementById('docContainerSelectViewer').value; if(!cont){alert('Selecciona contenedor');return;} descargarDocsCont(cont); }
+        function descargarDocsCont(cont) { let docs=documentos[cont]||[]; if(!docs.length){alert('No hay documentos');return;} docs.forEach(d=>{let a=document.createElement('a');a.href=d.datos;a.download=`${cont}_${d.nombre}`;a.click();}); }
 
-        function cerrarLogin() {
-            document.getElementById('loginOverlay').classList.remove('active');
-        }
-
-        function verificarPassword() {
-            let pass = document.getElementById('passwordInput').value;
-            if (pass === ADMIN_PASSWORD) {
-                esAdmin = true;
-                document.getElementById('loginOverlay').classList.remove('active');
-                actualizarUI();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
-                document.getElementById('passwordInput').value = '';
-            }
-        }
-
-        function cerrarSesion() {
-            esAdmin = false;
-            actualizarUI();
-        }
-
-        function adjuntarDocumento() {
-            if (!esAdmin) { alert('Solo el administrador puede adjuntar documentos'); return; }
-            let cont = document.getElementById('docContainerSelect').value;
-            let file = document.getElementById('docFile').files[0];
-            if (!cont || !file) { alert('Selecciona contenedor y archivo'); return; }
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                if (!documentos[cont]) documentos[cont] = [];
-                documentos[cont].push({nombre:file.name, tipo:file.type, datos:e.target.result, fecha:new Date().toLocaleString()});
-                guardarDocs();
-                alert('✅ Documento adjuntado a ' + cont);
-                document.getElementById('docFile').value = '';
-                mostrar();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function verDocumentos() {
-            let cont = document.getElementById('docContainerSelect').value;
-            if (!cont) { alert('Selecciona contenedor'); return; }
-            verDocumentosDirecto(cont);
-        }
-
-        function verDocumentosViewer() {
-            let cont = document.getElementById('docContainerSelectViewer').value;
-            if (!cont) { alert('Selecciona contenedor'); return; }
-            verDocumentosDirecto(cont);
-        }
-
-        function verDoc(cont, i) {
-            let doc = documentos[cont][i];
-            let w = window.open('','_blank');
-            w.document.write(doc.tipo.includes('pdf') ? `<iframe src="${doc.datos}" width="100%" height="100%"></iframe>` : `<img src="${doc.datos}" style="max-width:100%;">`);
-        }
-
-        function eliminarDoc(cont, i) {
-            if (!esAdmin) return;
-            if (confirm('¿Eliminar?')) { documentos[cont].splice(i,1); if (!documentos[cont].length) delete documentos[cont]; guardarDocs(); verDocumentosDirecto(cont); mostrar(); }
-        }
-
-        function descargarDocumentos() {
-            let cont = document.getElementById('docContainerSelect').value;
-            if (!cont) { alert('Selecciona contenedor'); return; }
-            descargarDocsCont(cont);
-        }
-
-        function descargarDocumentosViewer() {
-            let cont = document.getElementById('docContainerSelectViewer').value;
-            if (!cont) { alert('Selecciona contenedor'); return; }
-            descargarDocsCont(cont);
-        }
-
-        function descargarDocsCont(cont) {
-            let docs = documentos[cont] || [];
-            if (!docs.length) { alert('No hay documentos'); return; }
-            docs.forEach(d => { let a = document.createElement('a'); a.href = d.datos; a.download = `${cont}_${d.nombre}`; a.click(); });
-        }
-
-        function exportar() {
+        // ===== EXPORTAR EXCEL (.xlsx) =====
+        function exportarExcel() {
             let itemsExport = getFiltrados();
-            let csv = "N°,Contenedor,Fecha,Estado,FOB (S/),Aduana (S/),Naviera (S/),Almacén (S/),Poggi (S/),Total (S/),FOB TOTAL,IMPUESTOS,GASTOS,TOTAL GENERAL\n";
-            itemsExport.forEach((item, i) => {
-                let t = item.fob+item.aduana+item.naviera+item.almacen+item.poggi;
-                csv += `${i+1},"${item.cont}","${item.fecha}","${item.estado}",${item.fob},${item.aduana},${item.naviera},${item.almacen},${item.poggi},${t.toFixed(2)},${item.fob.toFixed(2)},${item.aduana.toFixed(2)},${(item.naviera+item.almacen+item.poggi).toFixed(2)},${(item.fob+item.aduana+item.naviera+item.almacen+item.poggi).toFixed(2)}\n`;
+            let data = [['N°','Contenedor','Fecha','Estado','FOB (S/)','Aduana (S/)','Naviera (S/)','Almacén (S/)','Poggi (S/)','Total (S/)','FOB TOTAL','IMPUESTOS','GASTOS','TOTAL GENERAL']];
+            itemsExport.forEach((item,i) => {
+                let t=item.fob+item.aduana+item.naviera+item.almacen+item.poggi, imp=item.aduana, gas=item.naviera+item.almacen+item.poggi;
+                data.push([i+1,item.cont,item.fecha,item.estado,item.fob,item.aduana,item.naviera,item.almacen,item.poggi,Number(t.toFixed(2)),Number(item.fob.toFixed(2)),Number(imp.toFixed(2)),Number(gas.toFixed(2)),Number((item.fob+imp+gas).toFixed(2))]);
             });
-            let b = new Blob([csv], {type:'text/csv'});
-            let a = document.createElement('a');
-            a.href = URL.createObjectURL(b);
-            a.download = 'contenedores.csv';
-            a.click();
+            let wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet(data);
+            ws['!cols'] = [{wch:5},{wch:12},{wch:12},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:16}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Contenedores');
+            XLSX.writeFile(wb, `contenedores_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
 
-        function aplicarTheme(t) {
-            theme = t;
-            localStorage.setItem('dashboard-theme', t);
-            document.documentElement.setAttribute('data-theme', t);
-            document.getElementById('themeLabel').textContent = THEMES[t];
+        // ===== EXPORTAR PDF =====
+        function exportarPDF() {
+            let itemsExport = getFiltrados();
+            const { jsPDF } = window.jspdf;
+            let doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            let pageW = doc.internal.pageSize.getWidth();
+            
+            // Título
+            doc.setFillColor(79,70,229); doc.rect(0,0,pageW,15,'F');
+            doc.setTextColor(255,255,255); doc.setFontSize(14); doc.setFont('helvetica','bold');
+            doc.text('Dashboard de Contenedores - Check Azul - en Soles', 10, 10);
+            
+            // KPIs
+            let tf=0,ta=0,tn=0,tal=0,tp=0;
+            itemsExport.forEach(i=>{tf+=i.fob;ta+=i.aduana;tn+=i.naviera;tal+=i.almacen;tp+=i.poggi;});
+            let gg=tn+tal+tp, gt=tf+ta+gg;
+            doc.setFontSize(9); doc.setTextColor(80,80,80);
+            doc.text(`FOB TOTAL: S/ ${tf.toFixed(2)}  |  IMPUESTOS: S/ ${ta.toFixed(2)}  |  GASTOS: S/ ${gg.toFixed(2)}  |  TOTAL GENERAL: S/ ${gt.toFixed(2)}`,10,22);
+            
+            // Tabla
+            let head = [['N°','Contenedor','Fecha','Estado','FOB (S/)','Aduana','Naviera','Almacén','Poggi','Total','FOB TOTAL','IMPUESTOS','GASTOS','TOTAL GRAL']];
+            let body = itemsExport.map((item,i)=>{
+                let t=item.fob+item.aduana+item.naviera+item.almacen+item.poggi;
+                return [i+1,item.cont,item.fecha,item.estado,formatNumber(item.fob),formatNumber(item.aduana),formatNumber(item.naviera),formatNumber(item.almacen),formatNumber(item.poggi),formatNumber(t),formatNumber(item.fob),formatNumber(item.aduana),formatNumber(item.naviera+item.almacen+item.poggi),formatNumber(item.fob+item.aduana+item.naviera+item.almacen+item.poggi)];
+            });
+            
+            doc.autoTable({
+                startY: 26, head: head, body: body, theme: 'grid',
+                styles: { fontSize: 7, cellPadding: 1.5, halign: 'center' },
+                headStyles: { fillColor: [79,70,229], textColor: 255, fontStyle: 'bold' },
+                columnStyles: {
+                    0: { cellWidth: 8 }, 1: { cellWidth: 16 }, 2: { cellWidth: 16 }, 3: { cellWidth: 18 },
+                    4: { halign: 'right' }, 5: { halign: 'right' }, 6: { halign: 'right' }, 7: { halign: 'right' },
+                    8: { halign: 'right' }, 9: { halign: 'right', fontStyle: 'bold' },
+                    10: { halign: 'right', fillColor: [237,233,254] }, 11: { halign: 'right', fillColor: [255,237,213] },
+                    12: { halign: 'right', fillColor: [254,240,138] }, 13: { halign: 'right', fillColor: [209,250,229] }
+                }
+            });
+            
+            let pc = doc.internal.getNumberOfPages();
+            for(let i=1;i<=pc;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(150);doc.text(`Página ${i} de ${pc} - Generado ${new Date().toLocaleString('es-PE')}`,pageW/2,doc.internal.pageSize.getHeight()-6,{align:'center'});}
+            doc.save(`dashboard_${new Date().toISOString().split('T')[0]}.pdf`);
         }
 
-        document.getElementById('themeToggle').addEventListener('click', (e) => {
-            e.stopPropagation();
-            document.getElementById('themeMenu').classList.toggle('hidden');
-        });
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.theme-picker')) document.getElementById('themeMenu').classList.add('hidden');
-        });
-        document.querySelectorAll('.theme-option').forEach(b => {
-            b.addEventListener('click', () => { aplicarTheme(b.dataset.theme); document.getElementById('themeMenu').classList.add('hidden'); });
-        });
-        document.getElementById('docModal').addEventListener('click', function(e) {
-            if (e.target === this) this.classList.remove('active');
-        });
+        function aplicarTheme(t) { theme=t; localStorage.setItem('dashboard-theme',t); document.documentElement.setAttribute('data-theme',t); document.getElementById('themeLabel').textContent=THEMES[t]; }
 
-        aplicarTheme(theme);
-        actualizarUI();
+        document.getElementById('themeToggle').addEventListener('click',(e)=>{e.stopPropagation();document.getElementById('themeMenu').classList.toggle('hidden');});
+        document.addEventListener('click',(e)=>{if(!e.target.closest('.theme-picker'))document.getElementById('themeMenu').classList.add('hidden');});
+        document.querySelectorAll('.theme-option').forEach(b=>{b.addEventListener('click',()=>{aplicarTheme(b.dataset.theme);document.getElementById('themeMenu').classList.add('hidden');});});
+        document.getElementById('docModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('active');});
+
+        aplicarTheme(theme); actualizarUI();
     </script>
 </body>
 </html>
