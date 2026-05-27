@@ -15,6 +15,7 @@
             --success: #10b981; --danger: #ef4444; --warn: #f59e0b;
             --table-row-hover: rgba(99,102,241,0.07); --table-col-total: rgba(99,102,241,0.10);
             --table-total-row: rgba(99,102,241,0.18); --zero-text: #3d486a;
+            --th-text: #ffffff; --th-bg: #6366f1;
         }
         html[data-theme="celeste"] {
             --bg: #051e2f; --bg-2: #082b44; --panel: #0e3a59; --panel-2: #154868;
@@ -23,6 +24,7 @@
             --success: #14b8a6; --danger: #f43f5e; --warn: #fbbf24;
             --table-row-hover: rgba(14,165,233,0.10); --table-col-total: rgba(14,165,233,0.12);
             --table-total-row: rgba(14,165,233,0.22); --zero-text: #3d6582;
+            --th-text: #ffffff; --th-bg: #0ea5e9;
         }
         html[data-theme="light"] {
             --bg: #f8fafc; --bg-2: #f1f5f9; --panel: #ffffff; --panel-2: #f1f5f9;
@@ -31,6 +33,7 @@
             --success: #059669; --danger: #dc2626; --warn: #d97706;
             --table-row-hover: rgba(79,70,229,0.06); --table-col-total: rgba(79,70,229,0.08);
             --table-total-row: rgba(79,70,229,0.14); --zero-text: #cbd5e1;
+            --th-text: #ffffff; --th-bg: #4f46e5;
         }
         html[data-theme="emerald"] {
             --bg: #042f2e; --bg-2: #064e3b; --panel: #065f46; --panel-2: #047857;
@@ -39,6 +42,7 @@
             --success: #34d399; --danger: #fb7185; --warn: #fcd34d;
             --table-row-hover: rgba(16,185,129,0.10); --table-col-total: rgba(16,185,129,0.14);
             --table-total-row: rgba(16,185,129,0.25); --zero-text: #2d6b58;
+            --th-text: #ffffff; --th-bg: #10b981;
         }
         html[data-theme="sunset"] {
             --bg: #1c1917; --bg-2: #292524; --panel: #2d2622; --panel-2: #44342a;
@@ -47,6 +51,7 @@
             --success: #84cc16; --danger: #dc2626; --warn: #facc15;
             --table-row-hover: rgba(249,115,22,0.10); --table-col-total: rgba(249,115,22,0.13);
             --table-total-row: rgba(249,115,22,0.22); --zero-text: #57433a;
+            --th-text: #ffffff; --th-bg: #f97316;
         }
         html[data-theme="purple"] {
             --bg: #1e0b2e; --bg-2: #2d1547; --panel: #3b1f5e; --panel-2: #4c2a76;
@@ -55,6 +60,7 @@
             --success: #22d3ee; --danger: #f43f5e; --warn: #fbbf24;
             --table-row-hover: rgba(168,85,247,0.10); --table-col-total: rgba(168,85,247,0.13);
             --table-total-row: rgba(168,85,247,0.22); --zero-text: #5a417a;
+            --th-text: #ffffff; --th-bg: #a855f7;
         }
 
         :root { --radius: 14px; --shadow: 0 8px 24px rgba(2,6,23,0.45); }
@@ -129,11 +135,9 @@
         .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
         .btn.primary:hover { background: var(--accent-hover); }
         .btn.success { background: var(--success); border-color: var(--success); color: #fff; }
-        .btn.success:hover { opacity: 0.9; }
         .btn.info { border-color: var(--accent); color: var(--accent); }
         .btn.info:hover { background: var(--accent-soft); }
         .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
-        .btn.danger:hover { opacity: 0.9; }
 
         .content { padding: 24px 28px 60px; display: grid; gap: 22px; }
 
@@ -143,10 +147,11 @@
             border-radius: var(--radius); padding: 18px;
             box-shadow: var(--shadow); position: relative; overflow: hidden;
         }
-        .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
-        .kpi:nth-child(2)::before { background: var(--success); }
-        .kpi:nth-child(3)::before { background: var(--warn); }
-        .kpi:nth-child(4)::before { background: var(--accent); opacity: 0.7; }
+        .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .kpi:nth-child(1)::before { background: var(--accent); }
+        .kpi:nth-child(2)::before { background: #f97316; }
+        .kpi:nth-child(3)::before { background: #eab308; }
+        .kpi:nth-child(4)::before { background: var(--success); }
         .kpi-label { font-size: 12px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.6px; }
         .kpi-value { font-size: 26px; font-weight: 700; margin-top: 8px; line-height: 1.1; }
         .kpi-sub { font-size: 12px; color: var(--text-soft); margin-top: 4px; }
@@ -170,20 +175,43 @@
         }
         table { border-collapse: collapse; font-size: 12px; width: auto; min-width: 100%; }
         th, td {
-            padding: 5px 8px; border-right: 1px solid var(--border);
-            border-bottom: 1px solid var(--border); text-align: right;
-            white-space: nowrap; line-height: 1.25;
+            padding: 6px 10px; border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border); text-align: center;
+            white-space: nowrap; line-height: 1.4;
         }
         th {
-            background: var(--panel-2); color: var(--text-soft);
-            font-weight: 700; text-transform: uppercase; font-size: 10.5px;
+            background: var(--th-bg); color: var(--th-text);
+            font-weight: 700; font-size: 12px;
             letter-spacing: 0.5px; position: sticky; top: 0; z-index: 2;
+            text-align: center;
         }
-        th:first-child, td:first-child { text-align: left; font-weight: 500; color: var(--text); }
+        th:first-child, td:first-child { text-align: center; }
         tbody tr:hover td { background: var(--table-row-hover); }
+        
+        /* Columnas especiales */
+        .col-fob-total { background: rgba(99,102,241,0.12); font-weight: 700; }
+        .col-impuestos { background: rgba(249,115,22,0.12); font-weight: 700; }
+        .col-gastos { background: rgba(234,179,8,0.12); font-weight: 700; }
+        .col-total-gral { background: rgba(16,185,129,0.12); font-weight: 700; }
+        
+        th.col-fob-total { background: #6366f1; color: #fff; }
+        th.col-impuestos { background: #f97316; color: #fff; }
+        th.col-gastos { background: #eab308; color: #000; }
+        th.col-total-gral { background: #10b981; color: #fff; }
+        
         .row-total { font-weight: 700; background: var(--table-col-total); }
         .spacer { background: var(--panel-2); min-width: 20px; }
         .zero { color: var(--zero-text); }
+
+        /* Bolitas de estado */
+        .estado-dot {
+            display: inline-block; width: 10px; height: 10px;
+            border-radius: 50%; margin-right: 6px; vertical-align: middle;
+        }
+        .dot-transito { background: #000000; }
+        .dot-aduana { background: #f97316; }
+        .dot-liberado { background: #eab308; }
+        .dot-entregado { background: #10b981; }
 
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -266,13 +294,17 @@
                             <th>N°</th><th>Contenedor</th><th>Fecha</th><th>Estado</th>
                             <th>FOB (S/)</th><th>Aduana (S/)</th><th>Naviera (S/)</th><th>Almacén (S/)</th><th>Poggi (S/)</th>
                             <th>Total (S/)</th><th class="spacer"></th>
-                            <th>FOB TOTAL</th><th>IMPUESTOS</th><th>GASTOS</th><th>TOTAL GRAL</th><th>Acción</th>
+                            <th class="col-fob-total">FOB TOTAL</th>
+                            <th class="col-impuestos">IMPUESTOS</th>
+                            <th class="col-gastos">GASTOS</th>
+                            <th class="col-total-gral">TOTAL GRAL</th>
+                            <th>Acción</th>
                         </tr>
                     </thead>
                     <tbody id="bodyTable"></tbody>
                 </table>
             </div>
-            <div style="margin-top:12px; display:flex; gap:8px;">
+            <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
                 <button class="btn primary" onclick="addRow()">➕ Agregar</button>
                 <button class="btn success" onclick="document.getElementById('docFile').click()">📤 Adjuntar Doc</button>
                 <button class="btn info" onclick="verDocumentos()">👁️ Ver Docs</button>
@@ -356,6 +388,14 @@
         function formatNumber(v) { return v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
         function formatSoles(v) { return 'S/ ' + formatNumber(v); }
 
+        function getDotClass(estado) {
+            if (estado === 'En tránsito') return 'dot-transito';
+            if (estado === 'En aduana') return 'dot-aduana';
+            if (estado === 'Liberado') return 'dot-liberado';
+            if (estado === 'Entregado') return 'dot-entregado';
+            return '';
+        }
+
         function getFiltrados() {
             if (filtroActual === 'todos') return items;
             let nums = filtroActual.split(',').map(n => n.trim());
@@ -373,13 +413,18 @@
                 let tgral = item.fob + imp + gas;
                 tf += item.fob; ta += item.aduana; tn += item.naviera; tal += item.almacen; tp += item.poggi;
                 let num = items.findIndex(it => it.id === item.id) + 1;
+                let dotClass = getDotClass(item.estado);
+                
                 html += `<tr>
                     <td>${num}</td>
                     <td><input value="${item.cont}" onchange="cambiar(${item.id},'cont',this.value)" style="width:70px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:center;"></td>
                     <td><input type="date" value="${item.fecha}" onchange="cambiar(${item.id},'fecha',this.value)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;"></td>
-                    <td><select onchange="cambiar(${item.id},'estado',this.value)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;">
-                        ${['En tránsito','En aduana','Liberado','Entregado'].map(e=>`<option ${item.estado==e?'selected':''}>${e}</option>`).join('')}
-                    </select></td>
+                    <td style="text-align:left;padding-left:12px;">
+                        <span class="estado-dot ${dotClass}"></span>
+                        <select onchange="cambiar(${item.id},'estado',this.value)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;">
+                            ${['En tránsito','En aduana','Liberado','Entregado'].map(e=>`<option ${item.estado==e?'selected':''}>${e}</option>`).join('')}
+                        </select>
+                    </td>
                     <td><input type="text" value="${formatNumber(item.fob)}" onfocus="this.value=${item.fob}" onblur="cambiar(${item.id},'fob',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:right;width:110px;"></td>
                     <td><input type="text" value="${formatNumber(item.aduana)}" onfocus="this.value=${item.aduana}" onblur="cambiar(${item.id},'aduana',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:right;width:110px;"></td>
                     <td><input type="text" value="${formatNumber(item.naviera)}" onfocus="this.value=${item.naviera}" onblur="cambiar(${item.id},'naviera',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:right;width:110px;"></td>
@@ -387,10 +432,10 @@
                     <td><input type="text" value="${formatNumber(item.poggi)}" onfocus="this.value=${item.poggi}" onblur="cambiar(${item.id},'poggi',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:right;width:110px;"></td>
                     <td class="row-total">${formatSoles(totalFila)}</td>
                     <td class="spacer"></td>
-                    <td class="row-total">${formatSoles(item.fob)}</td>
-                    <td class="row-total">${formatSoles(imp)}</td>
-                    <td class="row-total">${formatSoles(gas)}</td>
-                    <td class="row-total">${formatSoles(tgral)}</td>
+                    <td class="col-fob-total">${formatSoles(item.fob)}</td>
+                    <td class="col-impuestos">${formatSoles(imp)}</td>
+                    <td class="col-gastos">${formatSoles(gas)}</td>
+                    <td class="col-total-gral">${formatSoles(tgral)}</td>
                     <td><button class="btn danger" onclick="borrar(${item.id})" style="padding:4px 8px;">🗑️</button></td>
                 </tr>`;
             });
@@ -524,7 +569,6 @@
             document.getElementById('themeLabel').textContent = THEMES[t];
         }
 
-        // Eventos
         document.getElementById('themeToggle').addEventListener('click', (e) => {
             e.stopPropagation();
             document.getElementById('themeMenu').classList.toggle('hidden');
@@ -539,7 +583,6 @@
             if (e.target === this) this.classList.remove('active');
         });
 
-        // Iniciar
         aplicarTheme(theme);
         mostrar();
         llenarSelects();
