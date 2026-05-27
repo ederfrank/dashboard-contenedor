@@ -1,125 +1,302 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Contenedores</title>
+    <title>Dashboard de Contenedores - En Soles</title>
     <style>
+        /* ============================================
+           PALETAS DE COLORES
+           ============================================ */
+        html[data-theme="indigo"] {
+            --bg: #0b1020; --bg-2: #0f172a; --panel: #111a32; --panel-2: #18213d;
+            --border: #233056; --text: #e5edff; --text-soft: #9aa6c7;
+            --accent: #6366f1; --accent-soft: rgba(99,102,241,0.15); --accent-hover: #4f46e5;
+            --success: #10b981; --danger: #ef4444; --warn: #f59e0b;
+            --table-row-hover: rgba(99,102,241,0.07); --table-col-total: rgba(99,102,241,0.10);
+            --table-total-row: rgba(99,102,241,0.18); --zero-text: #3d486a;
+        }
+        html[data-theme="celeste"] {
+            --bg: #051e2f; --bg-2: #082b44; --panel: #0e3a59; --panel-2: #154868;
+            --border: #1f5b80; --text: #e0f2fe; --text-soft: #94c5e0;
+            --accent: #0ea5e9; --accent-soft: rgba(14,165,233,0.15); --accent-hover: #0284c7;
+            --success: #14b8a6; --danger: #f43f5e; --warn: #fbbf24;
+            --table-row-hover: rgba(14,165,233,0.10); --table-col-total: rgba(14,165,233,0.12);
+            --table-total-row: rgba(14,165,233,0.22); --zero-text: #3d6582;
+        }
+        html[data-theme="light"] {
+            --bg: #f8fafc; --bg-2: #f1f5f9; --panel: #ffffff; --panel-2: #f1f5f9;
+            --border: #e2e8f0; --text: #0f172a; --text-soft: #64748b;
+            --accent: #4f46e5; --accent-soft: rgba(79,70,229,0.10); --accent-hover: #4338ca;
+            --success: #059669; --danger: #dc2626; --warn: #d97706;
+            --table-row-hover: rgba(79,70,229,0.06); --table-col-total: rgba(79,70,229,0.08);
+            --table-total-row: rgba(79,70,229,0.14); --zero-text: #cbd5e1;
+        }
+        html[data-theme="emerald"] {
+            --bg: #042f2e; --bg-2: #064e3b; --panel: #065f46; --panel-2: #047857;
+            --border: #0d9488; --text: #ecfdf5; --text-soft: #a7f3d0;
+            --accent: #10b981; --accent-soft: rgba(16,185,129,0.18); --accent-hover: #059669;
+            --success: #34d399; --danger: #fb7185; --warn: #fcd34d;
+            --table-row-hover: rgba(16,185,129,0.10); --table-col-total: rgba(16,185,129,0.14);
+            --table-total-row: rgba(16,185,129,0.25); --zero-text: #2d6b58;
+        }
+        html[data-theme="sunset"] {
+            --bg: #1c1917; --bg-2: #292524; --panel: #2d2622; --panel-2: #44342a;
+            --border: #6b4226; --text: #fef3c7; --text-soft: #fbbf77;
+            --accent: #f97316; --accent-soft: rgba(249,115,22,0.15); --accent-hover: #ea580c;
+            --success: #84cc16; --danger: #dc2626; --warn: #facc15;
+            --table-row-hover: rgba(249,115,22,0.10); --table-col-total: rgba(249,115,22,0.13);
+            --table-total-row: rgba(249,115,22,0.22); --zero-text: #57433a;
+        }
+        html[data-theme="purple"] {
+            --bg: #1e0b2e; --bg-2: #2d1547; --panel: #3b1f5e; --panel-2: #4c2a76;
+            --border: #6b3fa0; --text: #f3e8ff; --text-soft: #c4b5fd;
+            --accent: #a855f7; --accent-soft: rgba(168,85,247,0.15); --accent-hover: #9333ea;
+            --success: #22d3ee; --danger: #f43f5e; --warn: #fbbf24;
+            --table-row-hover: rgba(168,85,247,0.10); --table-col-total: rgba(168,85,247,0.13);
+            --table-total-row: rgba(168,85,247,0.22); --zero-text: #5a417a;
+        }
+
+        :root { --radius: 14px; --shadow: 0 8px 24px rgba(2,6,23,0.45); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; padding: 20px; }
-        .dashboard { max-width: 100%; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; text-align: center; }
-        h1 { font-size: 2em; margin-bottom: 10px; }
-        .content { padding: 30px; overflow-x: auto; }
-        .section-title { font-size: 1.3em; font-weight: 600; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
-        .filter-section { background: #f5f5f5; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .filter-section label { font-weight: bold; margin-right: 10px; }
-        .filter-section select { padding: 8px; border: 1px solid #ddd; border-radius: 5px; min-width: 200px; }
-        .filter-section .btn { margin-left: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; min-width: 1600px; }
-        thead { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
-        th, td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #ddd; font-size: 13px; }
-        th { font-weight: 600; }
-        input, select { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; text-align: center; }
-        .btn { background: #667eea; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin: 5px; font-size: 13px; }
-        .btn:hover { background: #764ba2; }
-        .btn-danger { background: #ff6b6b; }
-        .btn-danger:hover { background: #ee5a52; }
-        .btn-info { background: #2196F3; }
-        .btn-info:hover { background: #1976D2; }
-        .btn-success { background: #4CAF50; }
-        .spacer { background: #f0f0f0; width: 30px; }
-        .totals-section { background: linear-gradient(135deg, #f8f9ff, #f0f2ff); padding: 25px; border-radius: 12px; margin: 20px 0; }
-        .totals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-        .total-box { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .total-box h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
-        .total-box .amount { font-size: 28px; font-weight: bold; color: #333; }
-        .total-highlight { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .total-highlight h3, .total-highlight .amount { color: white; }
-        .row-total { font-weight: bold; background: #f9f9f9; }
-        .actions { text-align: center; margin-top: 20px; }
-        .money-input { text-align: right; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
-        .modal-content { background: white; margin: 50px auto; padding: 30px; width: 90%; max-width: 800px; border-radius: 15px; max-height: 80vh; overflow-y: auto; }
-        .modal-header { font-size: 1.3em; font-weight: bold; margin-bottom: 20px; }
+
+        html, body {
+            background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+            min-height: 100vh; transition: background 0.3s ease;
+        }
+
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 28px; border-bottom: 1px solid var(--border);
+            background: var(--panel); position: sticky; top: 0; z-index: 20;
+            gap: 16px; flex-wrap: wrap;
+        }
+        .brand h1 { margin: 0; font-size: 20px; letter-spacing: 0.2px; }
+        .brand .sub { font-size: 12px; color: var(--text-soft); }
+
+        .header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+        .theme-picker { position: relative; }
+        .theme-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--panel-2); border: 1px solid var(--border);
+            color: var(--text); padding: 8px 14px; border-radius: 10px;
+            cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.15s;
+        }
+        .theme-btn:hover { border-color: var(--accent); }
+        .theme-menu {
+            position: absolute; right: 0; top: calc(100% + 8px);
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 12px; padding: 6px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.4); min-width: 200px;
+            z-index: 50; display: flex; flex-direction: column; gap: 2px;
+        }
+        .theme-menu.hidden { display: none; }
+        .theme-option {
+            display: flex; align-items: center; gap: 12px;
+            background: transparent; border: none; color: var(--text);
+            padding: 9px 12px; border-radius: 8px; cursor: pointer;
+            text-align: left; font-size: 13px; font-weight: 500; transition: background 0.15s;
+        }
+        .theme-option:hover { background: var(--panel-2); }
+        .swatch { width: 18px; height: 18px; border-radius: 6px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
+        .swatch-indigo { background: linear-gradient(135deg, #0b1020, #6366f1); }
+        .swatch-celeste { background: linear-gradient(135deg, #051e2f, #0ea5e9); }
+        .swatch-light { background: linear-gradient(135deg, #fff, #4f46e5); }
+        .swatch-emerald { background: linear-gradient(135deg, #042f2e, #10b981); }
+        .swatch-sunset { background: linear-gradient(135deg, #1c1917, #f97316); }
+        .swatch-purple { background: linear-gradient(135deg, #1e0b2e, #a855f7); }
+
+        .filters {
+            display: flex; flex-wrap: wrap; align-items: end; gap: 16px;
+            padding: 18px 28px; background: var(--panel); border-bottom: 1px solid var(--border);
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; }
+        .filter-group label { font-size: 11px; text-transform: uppercase; color: var(--text-soft); letter-spacing: 0.6px; }
+        .filter-group input[type="text"], .filter-group select {
+            background: var(--panel-2); border: 1px solid var(--border);
+            color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 14px;
+        }
+        .btn {
+            padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--panel-2); color: var(--text); cursor: pointer;
+            font-weight: 600; font-size: 13px; transition: all 0.15s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn.primary:hover { background: var(--accent-hover); }
+        .btn.success { background: var(--success); border-color: var(--success); color: #fff; }
+        .btn.success:hover { opacity: 0.9; }
+        .btn.info { border-color: var(--accent); color: var(--accent); }
+        .btn.info:hover { background: var(--accent-soft); }
+        .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+        .btn.danger:hover { opacity: 0.9; }
+
+        .content { padding: 24px 28px 60px; display: grid; gap: 22px; }
+
+        .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+        .kpi {
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 18px;
+            box-shadow: var(--shadow); position: relative; overflow: hidden;
+        }
+        .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+        .kpi:nth-child(2)::before { background: var(--success); }
+        .kpi:nth-child(3)::before { background: var(--warn); }
+        .kpi:nth-child(4)::before { background: var(--accent); opacity: 0.7; }
+        .kpi-label { font-size: 12px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.6px; }
+        .kpi-value { font-size: 26px; font-weight: 700; margin-top: 8px; line-height: 1.1; }
+        .kpi-sub { font-size: 12px; color: var(--text-soft); margin-top: 4px; }
+
+        .card {
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 18px 20px 22px; box-shadow: var(--shadow);
+        }
+        .card-head {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+        }
+        .card-head h2 { margin: 0; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge {
+            background: var(--panel-2); border: 1px solid var(--border);
+            color: var(--text-soft); padding: 4px 10px; border-radius: 999px; font-size: 12px;
+        }
+
+        .table-wrap {
+            overflow-x: auto; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--panel);
+        }
+        table { border-collapse: collapse; font-size: 12px; width: auto; min-width: 100%; }
+        th, td {
+            padding: 5px 8px; border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border); text-align: right;
+            white-space: nowrap; line-height: 1.25;
+        }
+        th {
+            background: var(--panel-2); color: var(--text-soft);
+            font-weight: 700; text-transform: uppercase; font-size: 10.5px;
+            letter-spacing: 0.5px; position: sticky; top: 0; z-index: 2;
+        }
+        th:first-child, td:first-child { text-align: left; font-weight: 500; color: var(--text); }
+        tbody tr:hover td { background: var(--table-row-hover); }
+        .row-total { font-weight: 700; background: var(--table-col-total); }
+        .spacer { background: var(--panel-2); min-width: 20px; }
+        .zero { color: var(--zero-text); }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--panel); padding: 30px; width: 90%; max-width: 700px;
+            border-radius: var(--radius); max-height: 80vh; overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+        .modal-header { font-size: 1.2em; font-weight: bold; margin-bottom: 20px; color: var(--text); }
         .file-list { list-style: none; padding: 0; }
-        .file-list li { padding: 10px; border: 1px solid #ddd; margin: 5px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-        .file-list li:hover { background: #f5f5f5; }
-        .close { float: right; font-size: 24px; cursor: pointer; }
-        .close:hover { color: #ff6b6b; }
-        .document-section { background: #fffbe6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffe082; }
-        @media (max-width: 768px) { .totals-grid { grid-template-columns: repeat(2, 1fr); } }
+        .file-list li {
+            padding: 10px; border: 1px solid var(--border); margin: 5px 0;
+            border-radius: 5px; display: flex; justify-content: space-between; align-items: center;
+            color: var(--text);
+        }
+        .close { float: right; font-size: 24px; cursor: pointer; color: var(--text); }
+        .close:hover { color: var(--danger); }
+
+        @media (max-width: 1000px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .kpis { grid-template-columns: 1fr; } .topbar { flex-direction: column; } }
     </style>
 </head>
 <body>
-    <div class="dashboard">
-        <div class="header">
+    <header class="topbar">
+        <div class="brand">
             <h1>🚢 Dashboard de Contenedores - En Soles</h1>
-            <p>Control de Gastos de Importación - FOB, Aduana, Naviera, Almacén, Poggi</p>
+            <span class="sub">FOB · Aduana · Naviera · Almacén · Poggi</span>
         </div>
-        <div class="content">
-            <div class="filter-section">
-                <label>🔍 Filtrar contenedores:</label>
-                <select id="filterSelect" onchange="filtrar()">
-                    <option value="todos">📋 Todos los contenedores</option>
-                </select>
-                <input type="text" id="searchInput" placeholder="O escribe números: 648,655,660" style="width:300px; padding:8px;" onkeyup="buscarManual()">
-                <button class="btn btn-info" onclick="mostrarTodos()">🔄 Mostrar Todos</button>
-            </div>
-            
-            <div class="document-section">
-                <strong>📎 Documentos por Contenedor:</strong>
-                <select id="docContainerSelect" style="width:200px; margin: 0 10px;">
-                    <option value="">Seleccionar contenedor</option>
-                </select>
-                <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="adjuntarDocumento()">
-                <button class="btn btn-success" onclick="document.getElementById('docFile').click()">📤 Adjuntar Documento</button>
-                <button class="btn btn-info" onclick="verDocumentos()">👁️ Ver Documentos</button>
-                <button class="btn" onclick="descargarDocumentos()">📥 Descargar Todo</button>
-            </div>
-            
-            <div class="section-title">📋 Registro de Contenedores</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>N°</th><th>N° Contenedor</th><th>Fecha Llegada</th><th>Estado</th>
-                        <th>FOB (S/)</th><th>Aduana (S/)</th><th>Naviera (S/)</th><th>Almacén (S/)</th><th>Poggi (S/)</th>
-                        <th>Total (S/)</th><th class="spacer"></th>
-                        <th>FOB TOTAL (S/)</th><th>IMPUESTOS (S/)</th><th>GASTOS (S/)</th><th>TOTAL GENERAL (S/)</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="bodyTable"></tbody>
-            </table>
-            
-            <button class="btn" onclick="addRow()">➕ Agregar Contenedor</button>
-            
-            <div class="totals-section">
-                <div class="section-title" style="margin-top:0;">💰 Resumen General en Soles</div>
-                <div class="totals-grid">
-                    <div class="total-box"><h3>FOB TOTAL</h3><div class="amount" id="granFOB">S/ 0</div></div>
-                    <div class="total-box"><h3>IMPUESTOS<br>(Aduana)</h3><div class="amount" id="granImpuestos">S/ 0</div></div>
-                    <div class="total-box"><h3>GASTOS<br>(Naviera+Almacén+Poggi)</h3><div class="amount" id="granGastos">S/ 0</div></div>
-                    <div class="total-box total-highlight"><h3>TOTAL GENERAL</h3><div class="amount" id="granTotal">S/ 0</div></div>
+        <div class="header-right">
+            <div class="theme-picker">
+                <button class="theme-btn" id="themeToggle" title="Cambiar paleta">
+                    <span>🎨</span> <span id="themeLabel">Claro</span>
+                </button>
+                <div class="theme-menu hidden" id="themeMenu">
+                    <button class="theme-option" data-theme="indigo"><span class="swatch swatch-indigo"></span>Indigo Oscuro</button>
+                    <button class="theme-option" data-theme="celeste"><span class="swatch swatch-celeste"></span>Celeste Marino</button>
+                    <button class="theme-option" data-theme="light"><span class="swatch swatch-light"></span>Claro</button>
+                    <button class="theme-option" data-theme="emerald"><span class="swatch swatch-emerald"></span>Verde Esmeralda</button>
+                    <button class="theme-option" data-theme="sunset"><span class="swatch swatch-sunset"></span>Naranja Atardecer</button>
+                    <button class="theme-option" data-theme="purple"><span class="swatch swatch-purple"></span>Púrpura Real</button>
                 </div>
             </div>
-            
-            <div class="actions">
-                <button class="btn" onclick="exportar()">📊 Exportar a Excel</button>
-                <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
-            </div>
         </div>
+    </header>
+
+    <section class="filters">
+        <div class="filter-group">
+            <label>Filtrar por contenedor</label>
+            <select id="filterSelect" onchange="filtrar()">
+                <option value="todos">📋 Todos los contenedores</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>O escribe números</label>
+            <input type="text" id="searchInput" placeholder="648, 655, 660" onkeyup="buscarManual()">
+        </div>
+        <button class="btn info" onclick="mostrarTodos()">🔄 Mostrar Todos</button>
+    </section>
+
+    <div class="content">
+        <section class="kpis" id="kpisContainer">
+            <div class="kpi"><div class="kpi-label">FOB TOTAL</div><div class="kpi-value" id="kpiFOB">S/ 0</div><div class="kpi-sub">FOB Inicial</div></div>
+            <div class="kpi"><div class="kpi-label">IMPUESTOS</div><div class="kpi-value" id="kpiImpuestos">S/ 0</div><div class="kpi-sub">Aduana</div></div>
+            <div class="kpi"><div class="kpi-label">GASTOS</div><div class="kpi-value" id="kpiGastos">S/ 0</div><div class="kpi-sub">Naviera + Almacén + Poggi</div></div>
+            <div class="kpi"><div class="kpi-label">TOTAL GENERAL</div><div class="kpi-value" id="kpiTotal">S/ 0</div><div class="kpi-sub">FOB + Impuestos + Gastos</div></div>
+        </section>
+
+        <section class="card">
+            <div class="card-head">
+                <h2>📋 Registro de Contenedores</h2>
+                <span class="badge" id="badgeCount">45 contenedores</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>N°</th><th>Contenedor</th><th>Fecha</th><th>Estado</th>
+                            <th>FOB (S/)</th><th>Aduana (S/)</th><th>Naviera (S/)</th><th>Almacén (S/)</th><th>Poggi (S/)</th>
+                            <th>Total (S/)</th><th class="spacer"></th>
+                            <th>FOB TOTAL</th><th>IMPUESTOS</th><th>GASTOS</th><th>TOTAL GRAL</th><th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyTable"></tbody>
+                </table>
+            </div>
+            <div style="margin-top:12px; display:flex; gap:8px;">
+                <button class="btn primary" onclick="addRow()">➕ Agregar</button>
+                <button class="btn success" onclick="document.getElementById('docFile').click()">📤 Adjuntar Doc</button>
+                <button class="btn info" onclick="verDocumentos()">👁️ Ver Docs</button>
+                <button class="btn" onclick="descargarDocumentos()">📥 Descargar Todo</button>
+                <button class="btn" onclick="exportar()">📊 Excel</button>
+            </div>
+            <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="adjuntarDocumento()">
+            <select id="docContainerSelect" style="margin-left:8px;padding:8px;border-radius:8px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);">
+                <option value="">Seleccionar contenedor</option>
+            </select>
+        </section>
     </div>
-    
+
     <div class="modal" id="docModal">
         <div class="modal-content">
-            <span class="close" onclick="document.getElementById('docModal').style.display='none'">&times;</span>
-            <div class="modal-header">📁 Documentos del Contenedor: <span id="modalContName"></span></div>
+            <span class="close" onclick="document.getElementById('docModal').classList.remove('active')">&times;</span>
+            <div class="modal-header">📁 Documentos: <span id="modalContName"></span></div>
             <ul class="file-list" id="fileList"></ul>
         </div>
     </div>
 
     <script>
+        const THEMES = { indigo:'Indigo Oscuro', celeste:'Celeste Marino', light:'Claro', emerald:'Verde Esmeralda', sunset:'Naranja Atardecer', purple:'Púrpura Real' };
+        
         const datosIniciales = [
             {id:1, cont:'643', fecha:'', estado:'Entregado', fob:70380, aduana:25365.5, naviera:2725.5, almacen:3105, poggi:7360},
             {id:2, cont:'644', fecha:'', estado:'Entregado', fob:63048.75, aduana:17517, naviera:2725.5, almacen:3105, poggi:7360},
@@ -167,204 +344,203 @@
             {id:44, cont:'698', fecha:'2026-07-06', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0},
             {id:45, cont:'699', fecha:'2026-06-11', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0}
         ];
-        
-        // Cargar datos: SIEMPRE usa datosIniciales como base
+
         let items = [...datosIniciales];
         let documentos = JSON.parse(localStorage.getItem('documentos')) || {};
         let filtroActual = 'todos';
-        
+        let theme = localStorage.getItem('dashboard-theme') || 'light';
+
         function guardar() { localStorage.setItem('misdatos', JSON.stringify(items)); }
         function guardarDocs() { localStorage.setItem('documentos', JSON.stringify(documentos)); }
         
-        function formatNumber(valor) {
-            return valor.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-        
-        function formatSoles(valor) {
-            return 'S/ ' + formatNumber(valor);
-        }
-        
-        function getItemsFiltrados() {
+        function formatNumber(v) { return v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+        function formatSoles(v) { return 'S/ ' + formatNumber(v); }
+
+        function getFiltrados() {
             if (filtroActual === 'todos') return items;
             let nums = filtroActual.split(',').map(n => n.trim());
             return items.filter(item => nums.includes(item.cont));
         }
-        
+
         function mostrar() {
+            let itemsMostrar = getFiltrados();
             let html = '';
-            let totalFOB = 0, totalAduana = 0, totalNaviera = 0, totalAlmacen = 0, totalPoggi = 0;
-            let itemsMostrar = getItemsFiltrados();
+            let tf = 0, ta = 0, tn = 0, tal = 0, tp = 0;
             
             itemsMostrar.forEach((item, i) => {
                 let totalFila = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
-                let impuestos = item.aduana;
-                let gastos = item.naviera + item.almacen + item.poggi;
-                let totalGeneral = item.fob + impuestos + gastos;
-                
-                totalFOB += item.fob;
-                totalAduana += item.aduana;
-                totalNaviera += item.naviera;
-                totalAlmacen += item.almacen;
-                totalPoggi += item.poggi;
-                
-                let numOriginal = items.findIndex(it => it.id === item.id) + 1;
-                
+                let imp = item.aduana, gas = item.naviera + item.almacen + item.poggi;
+                let tgral = item.fob + imp + gas;
+                tf += item.fob; ta += item.aduana; tn += item.naviera; tal += item.almacen; tp += item.poggi;
+                let num = items.findIndex(it => it.id === item.id) + 1;
                 html += `<tr>
-                    <td>${numOriginal}</td>
-                    <td><input value="${item.cont}" onchange="cambiar(${item.id}, 'cont', this.value)"></td>
-                    <td><input type="date" value="${item.fecha}" onchange="cambiar(${item.id}, 'fecha', this.value)"></td>
-                    <td><select onchange="cambiar(${item.id}, 'estado', this.value)">
-                        <option ${item.estado=='En tránsito'?'selected':''}>En tránsito</option>
-                        <option ${item.estado=='En aduana'?'selected':''}>En aduana</option>
-                        <option ${item.estado=='Liberado'?'selected':''}>Liberado</option>
-                        <option ${item.estado=='Entregado'?'selected':''}>Entregado</option>
+                    <td>${num}</td>
+                    <td><input value="${item.cont}" onchange="cambiar(${item.id},'cont',this.value)" style="width:70px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:center;"></td>
+                    <td><input type="date" value="${item.fecha}" onchange="cambiar(${item.id},'fecha',this.value)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;"></td>
+                    <td><select onchange="cambiar(${item.id},'estado',this.value)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;">
+                        ${['En tránsito','En aduana','Liberado','Entregado'].map(e=>`<option ${item.estado==e?'selected':''}>${e}</option>`).join('')}
                     </select></td>
-                    <td><input type="text" class="money-input" value="${formatNumber(item.fob)}" onfocus="this.value=${item.fob}" onblur="cambiar(${item.id},'fob',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
-                    <td><input type="text" class="money-input" value="${formatNumber(item.aduana)}" onfocus="this.value=${item.aduana}" onblur="cambiar(${item.id},'aduana',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
-                    <td><input type="text" class="money-input" value="${formatNumber(item.naviera)}" onfocus="this.value=${item.naviera}" onblur="cambiar(${item.id},'naviera',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
-                    <td><input type="text" class="money-input" value="${formatNumber(item.almacen)}" onfocus="this.value=${item.almacen}" onblur="cambiar(${item.id},'almacen',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
-                    <td><input type="text" class="money-input" value="${formatNumber(item.poggi)}" onfocus="this.value=${item.poggi}" onblur="cambiar(${item.id},'poggi',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)"></td>
+                    <td><input type="text" value="${formatNumber(item.fob)}" onfocus="this.value=${item.fob}" onblur="cambiar(${item.id},'fob',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:right;width:110px;"></td>
+                    <td><input type="text" value="${formatNumber(item.aduana)}" onfocus="this.value=${item.aduana}" onblur="cambiar(${item.id},'aduana',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:right;width:110px;"></td>
+                    <td><input type="text" value="${formatNumber(item.naviera)}" onfocus="this.value=${item.naviera}" onblur="cambiar(${item.id},'naviera',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:right;width:110px;"></td>
+                    <td><input type="text" value="${formatNumber(item.almacen)}" onfocus="this.value=${item.almacen}" onblur="cambiar(${item.id},'almacen',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:right;width:110px;"></td>
+                    <td><input type="text" value="${formatNumber(item.poggi)}" onfocus="this.value=${item.poggi}" onblur="cambiar(${item.id},'poggi',parseFloat(this.value.replace(/,/g,''))||0);this.value=formatNumber(parseFloat(this.value.replace(/,/g,''))||0)" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px;text-align:right;width:110px;"></td>
                     <td class="row-total">${formatSoles(totalFila)}</td>
                     <td class="spacer"></td>
                     <td class="row-total">${formatSoles(item.fob)}</td>
-                    <td class="row-total">${formatSoles(impuestos)}</td>
-                    <td class="row-total">${formatSoles(gastos)}</td>
-                    <td class="row-total">${formatSoles(totalGeneral)}</td>
-                    <td><button class="btn btn-danger" onclick="borrar(${item.id})">🗑️</button></td>
+                    <td class="row-total">${formatSoles(imp)}</td>
+                    <td class="row-total">${formatSoles(gas)}</td>
+                    <td class="row-total">${formatSoles(tgral)}</td>
+                    <td><button class="btn danger" onclick="borrar(${item.id})" style="padding:4px 8px;">🗑️</button></td>
                 </tr>`;
             });
             
-            document.getElementById('bodyTable').innerHTML = html || '<tr><td colspan="16">No se encontraron contenedores.</td></tr>';
+            document.getElementById('bodyTable').innerHTML = html || '<tr><td colspan="16" style="text-align:center;padding:20px;color:var(--text-soft);">No se encontraron contenedores.</td></tr>';
+            document.getElementById('badgeCount').textContent = itemsMostrar.length + ' contenedores';
             
-            let granGastos = totalNaviera + totalAlmacen + totalPoggi;
-            let granTotal = totalFOB + totalAduana + granGastos;
-            
-            document.getElementById('granFOB').textContent = formatSoles(totalFOB);
-            document.getElementById('granImpuestos').textContent = formatSoles(totalAduana);
-            document.getElementById('granGastos').textContent = formatSoles(granGastos);
-            document.getElementById('granTotal').textContent = formatSoles(granTotal);
+            let granGastos = tn + tal + tp;
+            let granTotal = tf + ta + granGastos;
+            document.getElementById('kpiFOB').textContent = formatSoles(tf);
+            document.getElementById('kpiImpuestos').textContent = formatSoles(ta);
+            document.getElementById('kpiGastos').textContent = formatSoles(granGastos);
+            document.getElementById('kpiTotal').textContent = formatSoles(granTotal);
             
             guardar();
         }
-        
+
         function cambiar(id, campo, valor) {
             let item = items.find(i => i.id === id);
             if (item) { item[campo] = valor; mostrar(); llenarSelects(); }
         }
-        
+
         function addRow() {
-            let maxId = items.length > 0 ? Math.max(...items.map(i => i.id)) : 0;
-            items.push({id: maxId + 1, cont: '', fecha: '', estado: 'En tránsito', fob: 0, aduana: 0, naviera: 0, almacen: 0, poggi: 0});
+            let maxId = items.length ? Math.max(...items.map(i => i.id)) : 0;
+            items.push({id:maxId+1, cont:'', fecha:'', estado:'En tránsito', fob:0, aduana:0, naviera:0, almacen:0, poggi:0});
             mostrar(); llenarSelects();
         }
-        
+
         function borrar(id) {
             if (confirm('¿Eliminar?')) { items = items.filter(i => i.id !== id); mostrar(); llenarSelects(); }
         }
-        
+
         function filtrar() {
             filtroActual = document.getElementById('filterSelect').value;
             document.getElementById('searchInput').value = '';
             mostrar();
         }
-        
+
         function buscarManual() {
-            let valor = document.getElementById('searchInput').value.trim();
-            filtroActual = valor === '' ? 'todos' : valor;
+            let v = document.getElementById('searchInput').value.trim();
+            filtroActual = v === '' ? 'todos' : v;
             document.getElementById('filterSelect').value = 'todos';
             mostrar();
         }
-        
+
         function mostrarTodos() {
             filtroActual = 'todos';
             document.getElementById('filterSelect').value = 'todos';
             document.getElementById('searchInput').value = '';
             mostrar();
         }
-        
+
         function llenarSelects() {
-            let filterSelect = document.getElementById('filterSelect');
-            let docSelect = document.getElementById('docContainerSelect');
-            filterSelect.innerHTML = '<option value="todos">📋 Todos los contenedores</option>';
-            docSelect.innerHTML = '<option value="">Seleccionar contenedor</option>';
+            let fs = document.getElementById('filterSelect');
+            let ds = document.getElementById('docContainerSelect');
+            fs.innerHTML = '<option value="todos">📋 Todos los contenedores</option>';
+            ds.innerHTML = '<option value="">Seleccionar contenedor</option>';
             items.forEach(item => {
                 if (item.cont) {
-                    filterSelect.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
-                    docSelect.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
+                    fs.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
+                    ds.innerHTML += `<option value="${item.cont}">${item.cont}</option>`;
                 }
             });
         }
-        
+
         function adjuntarDocumento() {
             let cont = document.getElementById('docContainerSelect').value;
             let file = document.getElementById('docFile').files[0];
-            if (!cont) { alert('Selecciona un contenedor'); return; }
-            if (!file) { alert('Selecciona un archivo'); return; }
+            if (!cont || !file) { alert('Selecciona contenedor y archivo'); return; }
             let reader = new FileReader();
             reader.onload = function(e) {
                 if (!documentos[cont]) documentos[cont] = [];
-                documentos[cont].push({nombre: file.name, tipo: file.type, datos: e.target.result, fecha: new Date().toLocaleString()});
+                documentos[cont].push({nombre:file.name, tipo:file.type, datos:e.target.result, fecha:new Date().toLocaleString()});
                 guardarDocs();
                 alert('✅ Documento adjuntado a ' + cont);
                 document.getElementById('docFile').value = '';
             };
             reader.readAsDataURL(file);
         }
-        
+
         function verDocumentos() {
             let cont = document.getElementById('docContainerSelect').value;
-            if (!cont) { alert('Selecciona un contenedor'); return; }
+            if (!cont) { alert('Selecciona contenedor'); return; }
             document.getElementById('modalContName').textContent = cont;
-            let lista = document.getElementById('fileList');
             let docs = documentos[cont] || [];
-            lista.innerHTML = docs.length === 0 ? '<li>No hay documentos.</li>' : docs.map((doc, i) => `
-                <li>
-                    <span>${doc.tipo.includes('pdf') ? '📄' : '🖼️'} ${doc.nombre} (${doc.fecha})</span>
-                    <span>
-                        <button class="btn btn-info" onclick="verDoc('${cont}',${i})">👁️</button>
-                        <button class="btn btn-danger" onclick="eliminarDoc('${cont}',${i})">🗑️</button>
-                    </span>
-                </li>`).join('');
-            document.getElementById('docModal').style.display = 'block';
+            document.getElementById('fileList').innerHTML = docs.length === 0 ? '<li style="color:var(--text-soft);">No hay documentos.</li>' : docs.map((d,i) => `
+                <li><span>${d.tipo.includes('pdf')?'📄':'🖼️'} ${d.nombre}</span>
+                <span>
+                    <button class="btn info" onclick="verDoc('${cont}',${i})" style="padding:4px 8px;">👁️</button>
+                    <button class="btn danger" onclick="eliminarDoc('${cont}',${i})" style="padding:4px 8px;">🗑️</button>
+                </span></li>`).join('');
+            document.getElementById('docModal').classList.add('active');
         }
-        
-        function verDoc(cont, index) {
-            let doc = documentos[cont][index];
-            let win = window.open('', '_blank');
-            win.document.write(doc.tipo.includes('pdf') ? `<iframe src="${doc.datos}" width="100%" height="100%"></iframe>` : `<img src="${doc.datos}" style="max-width:100%;">`);
+
+        function verDoc(cont, i) {
+            let doc = documentos[cont][i];
+            let w = window.open('','_blank');
+            w.document.write(doc.tipo.includes('pdf') ? `<iframe src="${doc.datos}" width="100%" height="100%"></iframe>` : `<img src="${doc.datos}" style="max-width:100%;">`);
         }
-        
-        function eliminarDoc(cont, index) {
-            if (confirm('¿Eliminar?')) { documentos[cont].splice(index, 1); if (documentos[cont].length === 0) delete documentos[cont]; guardarDocs(); verDocumentos(); }
+
+        function eliminarDoc(cont, i) {
+            if (confirm('¿Eliminar?')) { documentos[cont].splice(i,1); if (!documentos[cont].length) delete documentos[cont]; guardarDocs(); verDocumentos(); }
         }
-        
+
         function descargarDocumentos() {
             let cont = document.getElementById('docContainerSelect').value;
-            if (!cont) { alert('Selecciona un contenedor'); return; }
+            if (!cont) { alert('Selecciona contenedor'); return; }
             let docs = documentos[cont] || [];
-            if (docs.length === 0) { alert('No hay documentos'); return; }
-            docs.forEach(doc => { let a = document.createElement('a'); a.href = doc.datos; a.download = `${cont}_${doc.nombre}`; a.click(); });
+            if (!docs.length) { alert('No hay documentos'); return; }
+            docs.forEach(d => { let a = document.createElement('a'); a.href = d.datos; a.download = `${cont}_${d.nombre}`; a.click(); });
         }
-        
+
         function exportar() {
-            let itemsExport = getItemsFiltrados();
-            let csv = "N°,Contenedor,Fecha Llegada,Estado,FOB (S/),Aduana (S/),Naviera (S/),Almacén (S/),Poggi (S/),Total (S/),FOB TOTAL (S/),IMPUESTOS (S/),GASTOS (S/),TOTAL GENERAL (S/)\n";
+            let itemsExport = getFiltrados();
+            let csv = "N°,Contenedor,Fecha,Estado,FOB (S/),Aduana (S/),Naviera (S/),Almacén (S/),Poggi (S/),Total (S/),FOB TOTAL,IMPUESTOS,GASTOS,TOTAL GENERAL\n";
             itemsExport.forEach((item, i) => {
-                let total = item.fob + item.aduana + item.naviera + item.almacen + item.poggi;
-                csv += `${i+1},"${item.cont}","${item.fecha}","${item.estado}",${item.fob},${item.aduana},${item.naviera},${item.almacen},${item.poggi},${total.toFixed(2)},${item.fob.toFixed(2)},${item.aduana.toFixed(2)},${(item.naviera+item.almacen+item.poggi).toFixed(2)},${(item.fob+item.aduana+item.naviera+item.almacen+item.poggi).toFixed(2)}\n`;
+                let t = item.fob+item.aduana+item.naviera+item.almacen+item.poggi;
+                csv += `${i+1},"${item.cont}","${item.fecha}","${item.estado}",${item.fob},${item.aduana},${item.naviera},${item.almacen},${item.poggi},${t.toFixed(2)},${item.fob.toFixed(2)},${item.aduana.toFixed(2)},${(item.naviera+item.almacen+item.poggi).toFixed(2)},${(item.fob+item.aduana+item.naviera+item.almacen+item.poggi).toFixed(2)}\n`;
             });
-            let blob = new Blob([csv], {type: 'text/csv'});
+            let b = new Blob([csv], {type:'text/csv'});
             let a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
+            a.href = URL.createObjectURL(b);
             a.download = 'contenedores.csv';
             a.click();
         }
-        
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('docModal')) document.getElementById('docModal').style.display = 'none';
+
+        function aplicarTheme(t) {
+            theme = t;
+            localStorage.setItem('dashboard-theme', t);
+            document.documentElement.setAttribute('data-theme', t);
+            document.getElementById('themeLabel').textContent = THEMES[t];
         }
-        
-        // Carga inicial
+
+        // Eventos
+        document.getElementById('themeToggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('themeMenu').classList.toggle('hidden');
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.theme-picker')) document.getElementById('themeMenu').classList.add('hidden');
+        });
+        document.querySelectorAll('.theme-option').forEach(b => {
+            b.addEventListener('click', () => { aplicarTheme(b.dataset.theme); document.getElementById('themeMenu').classList.add('hidden'); });
+        });
+        document.getElementById('docModal').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+
+        // Iniciar
+        aplicarTheme(theme);
         mostrar();
         llenarSelects();
     </script>
