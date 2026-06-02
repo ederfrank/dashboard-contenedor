@@ -7,6 +7,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         html[data-theme="indigo"] { --bg:#0b1020;--bg-2:#0f172a;--panel:#111a32;--panel-2:#18213d;--border:#233056;--text:#e5edff;--text-soft:#9aa6c7;--accent:#6366f1;--accent-soft:rgba(99,102,241,0.15);--accent-hover:#4f46e5;--success:#10b981;--danger:#ef4444;--warn:#f59e0b;--table-row-hover:rgba(99,102,241,0.07);--table-col-total:rgba(99,102,241,0.10);--zero-text:#3d486a;--th-text:#fff;--th-bg:#6366f1; }
         html[data-theme="celeste"] { --bg:#051e2f;--bg-2:#082b44;--panel:#0e3a59;--panel-2:#154868;--border:#1f5b80;--text:#e0f2fe;--text-soft:#94c5e0;--accent:#0ea5e9;--accent-soft:rgba(14,165,233,0.15);--accent-hover:#0284c7;--success:#14b8a6;--danger:#f43f5e;--warn:#fbbf24;--table-row-hover:rgba(14,165,233,0.10);--table-col-total:rgba(14,165,233,0.12);--zero-text:#3d6582;--th-text:#fff;--th-bg:#0ea5e9; }
@@ -107,16 +109,44 @@
         .toast.error{background:var(--danger)}
         @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 
-        @media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}}
-        @media(max-width:600px){.kpis{grid-template-columns:1fr}.topbar{flex-direction:column}}
+        /* ===== Pestañas (Tabla / KPIs) ===== */
+        .tabs{display:flex;gap:6px;padding:10px 28px 0;background:var(--panel);border-bottom:1px solid var(--border)}
+        .tab-btn{padding:10px 18px;border:none;background:transparent;color:var(--text-soft);cursor:pointer;font-weight:700;font-size:13px;border-bottom:3px solid transparent;border-radius:8px 8px 0 0;transition:all .15s}
+        .tab-btn:hover{color:var(--text);background:var(--panel-2)}
+        .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+        .tab-panel{display:none;animation:fadeIn .3s ease}
+        .tab-panel.active{display:block}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+        /* ===== KPIs con más impacto ===== */
+        .kpi{transition:transform .2s ease, box-shadow .2s ease}
+        .kpi:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(2,6,23,0.30)}
+        .kpi-value{letter-spacing:-0.5px}
+        .kpi-trend{font-size:10px;margin-top:4px;font-weight:700}
+
+        /* ===== Sección de gráficos ===== */
+        .charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+        .chart-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+        .chart-card h3{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-soft);margin-bottom:14px;font-weight:700}
+        .chart-box{position:relative;height:280px}
+        .chart-box.tall{height:340px}
+        .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+        .stat-mini{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:var(--shadow);border-left:4px solid var(--accent)}
+        .stat-mini .lbl{font-size:10px;text-transform:uppercase;color:var(--text-soft);letter-spacing:.5px}
+        .stat-mini .val{font-size:20px;font-weight:800;margin-top:6px;letter-spacing:-0.5px}
+        .stat-mini.s-transito{border-left-color:#64748b}.stat-mini.s-aduana{border-left-color:#f97316}
+        .stat-mini.s-liberado{border-left-color:#eab308}.stat-mini.s-entregado{border-left-color:#10b981}
+
+        @media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}.stat-row{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:600px){.kpis{grid-template-columns:1fr}.topbar{flex-direction:column}.stat-row{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
-            <h2>🔐 Ingresar Contraseña</h2>
+            <h2>🔐 Ingresar como Administrador</h2>
             <p style="color:var(--text-soft);margin-bottom:12px;font-size:13px;">Solo el administrador puede editar</p>
-            <input type="password" id="passwordInput" placeholder="••••••••" onkeypress="if(event.key==='Enter')verificarPassword()">
+            <input type="password" id="passwordInput" placeholder="Contraseña" autocomplete="current-password" onkeypress="if(event.key==='Enter')verificarPassword()">
             <button class="btn primary" onclick="verificarPassword()">Ingresar</button>
             <p class="login-error" id="loginError">Contraseña incorrecta</p>
             <button class="btn" style="margin-top:6px;background:transparent;border-color:var(--border);" onclick="cerrarLogin()">Solo ver</button>
@@ -145,6 +175,13 @@
             </div>
         </div>
     </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" id="tabBtnTabla" onclick="cambiarTab('tabla')">📋 Registro</button>
+        <button class="tab-btn" id="tabBtnKpis" onclick="cambiarTab('kpis')">📊 Dashboard KPIs</button>
+    </nav>
+
+    <div class="tab-panel active" id="panelTabla">
 
     <section class="filters">
         <div class="filter-group"><label>Contenedor</label><select id="filterSelect" onchange="filtrar()"><option value="todos">📋 Todos</option></select></div>
@@ -187,6 +224,7 @@
             </div>
             <div id="adminButtons" style="margin-top:10px; display:none; gap:6px; flex-wrap:wrap;align-items:center;">
                 <button class="btn primary" onclick="addRow()">➕ Agregar</button>
+                <button class="btn success" onclick="document.getElementById('bulkFile').click()">📥 Carga Masiva Excel</button>
                 <button class="btn success" onclick="document.getElementById('docFile').click()">📤 Adjuntar Doc</button>
                 <select id="docContainerSelect" style="padding:6px;border-radius:6px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);font-size:12px;"><option value="">Seleccionar contenedor</option></select>
                 <span style="font-size:10px;color:var(--text-soft);">⚠️ Selecciona contenedor antes de adjuntar</span>
@@ -203,8 +241,35 @@
                 <button class="btn" onclick="exportarPDF()">📄 PDF</button>
             </div>
             <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="adjuntarDocumento()">
+            <input type="file" id="bulkFile" accept=".xlsx,.xls" style="display:none;" onchange="cargaMasiva()">
         </section>
     </div>
+    </div><!-- /panelTabla -->
+
+    <div class="tab-panel" id="panelKpis">
+        <div class="content">
+            <section class="kpis">
+                <div class="kpi"><div class="kpi-label">FOB TOTAL</div><div class="kpi-value" id="k2FOB">S/ 0</div><div class="kpi-sub">Valor FOB inicial</div></div>
+                <div class="kpi"><div class="kpi-label">IMPUESTOS</div><div class="kpi-value" id="k2Imp">S/ 0</div><div class="kpi-sub">Aduana</div></div>
+                <div class="kpi"><div class="kpi-label">GASTOS</div><div class="kpi-value" id="k2Gas">S/ 0</div><div class="kpi-sub">Naviera + Almacén + Poggi</div></div>
+                <div class="kpi"><div class="kpi-label">TOTAL GENERAL</div><div class="kpi-value" id="k2Tot">S/ 0</div><div class="kpi-sub">Costo total acumulado</div></div>
+            </section>
+
+            <div class="stat-row">
+                <div class="stat-mini s-transito"><div class="lbl">⚫ En tránsito</div><div class="val" id="stTransito">0</div></div>
+                <div class="stat-mini s-aduana"><div class="lbl">🟠 En aduana</div><div class="val" id="stAduana">0</div></div>
+                <div class="stat-mini s-liberado"><div class="lbl">🟡 Liberado</div><div class="val" id="stLiberado">0</div></div>
+                <div class="stat-mini s-entregado"><div class="lbl">🟢 Entregado</div><div class="val" id="stEntregado">0</div></div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card"><h3>Distribución del costo total</h3><div class="chart-box"><canvas id="chartCostos"></canvas></div></div>
+                <div class="chart-card"><h3>Contenedores por estado</h3><div class="chart-box"><canvas id="chartEstados"></canvas></div></div>
+                <div class="chart-card"><h3>Costo total por contenedor</h3><div class="chart-box tall"><canvas id="chartPorContenedor"></canvas></div></div>
+                <div class="chart-card"><h3>Top 10 contenedores más costosos</h3><div class="chart-box tall"><canvas id="chartTop"></canvas></div></div>
+            </div>
+        </div>
+    </div><!-- /panelKpis -->
 
     <div class="modal" id="docModal">
         <div class="modal-content">
@@ -217,49 +282,35 @@
     </div>
 
         <script>
-        const ADMIN_PASSWORD = 'checkazul2026';
+        // ===================================================================
+        //  CONFIGURACIÓN SUPABASE
+        //  Reemplaza estos dos valores por los de tu proyecto:
+        //  Supabase → Project Settings → Data API / API Keys
+        // ===================================================================
+        const SUPABASE_URL = 'https://btrwxhxrunizvjetdrkp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0cnd4aHhydW5penZqZXRkcmtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MDU1OTMsImV4cCI6MjA5NTM4MTU5M30.OFLXPerkv76_r5YWxXz5B8EWPZIJ3TgptAYulJ9ivvY';
+        // ===================================================================
+
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const BUCKET = 'documentos';
+
         const THEMES = { indigo:'Indigo Oscuro', celeste:'Celeste Marino', light:'Claro', emerald:'Verde Esmeralda', sunset:'Naranja Atardecer', purple:'Púrpura Real' };
         let esAdmin = false;
-        
-        const datosIniciales = [ /* ... tus 45 contenedores ... */ ];
-
-        let items = [...datosIniciales];
-        let documentos = JSON.parse(localStorage.getItem('documentos')) || {};
+        let items = [];                 // contenedores (desde Supabase)
+        let documentos = {};            // { cont: [ {nombre, path, url, tipo, fecha} ] }
         let filtroContenedor = 'todos', filtroEstado = 'todos', theme = localStorage.getItem('dashboard-theme') || 'light';
 
-        function guardar() { localStorage.setItem('misdatos', JSON.stringify(items)); }
-        function guardarDocs() { localStorage.setItem('documentos', JSON.stringify(documentos)); }
-        function formatNumber(v) { return v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+        function formatNumber(v) { return Number(v||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
         function formatSoles(v) { return 'S/ ' + formatNumber(v); }
         function getDotClass(e) { return e==='En tránsito'?'dot-transito':e==='En aduana'?'dot-aduana':e==='Liberado'?'dot-liberado':e==='Entregado'?'dot-entregado':''; }
 
-        // ===== NUEVO: Guardar cambios pendientes desde los inputs =====
-        function guardarCambiosPendientes() {
-            if (!esAdmin) return; // solo admin puede modificar
-            const filas = document.querySelectorAll('#bodyTable tr');
-            filas.forEach(fila => {
-                const inputs = fila.querySelectorAll('input');
-                const select = fila.querySelector('select');
-                if (!inputs.length) return;
-                // El número de contenedor está en el input 0 (cont), fecha en input 1, luego 5 inputs de dinero
-                const contInput = inputs[0];
-                const fechaInput = inputs[1];
-                const fobInput = inputs[2];
-                const aduanaInput = inputs[3];
-                const navieraInput = inputs[4];
-                const almacenInput = inputs[5];
-                const poggiInput = inputs[6];
-                
-                // Encontrar el item por número de contenedor (asumiendo que no se cambió el cont mientras tanto)
-                // Mejor buscar por el id almacenado en un atributo data-id que no tenemos.
-                // Solución: recorrer items y actualizar el que coincida con el cont actual del input (puede fallar si se cambió)
-                // Vamos a agregar un atributo data-id a la fila al renderizar.
-            });
-            // Es más seguro volver a renderizar la tabla para asegurar consistencia, pero perderíamos el foco.
-            // Alternativa: forzar un blur en el elemento activo para que dispare el onchange.
-            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
-                document.activeElement.blur();
-            }
+        // ===== DATOS: leer de Supabase =====
+        async function cargarDesdeServidor() {
+            const { data, error } = await sb.from('contenedores').select('*').order('orden', {ascending:true}).order('id', {ascending:true});
+            if (error) { mostrarToast('⚠️ Error al leer datos: ' + error.message, 'error'); return; }
+            items = data || [];
+            await cargarDocumentos();
+            mostrar(); llenarSelects();
         }
 
         function getFiltrados() {
@@ -280,7 +331,7 @@
 
         function mostrar() {
             let itemsMostrar = getFiltrados(), html = '', tf=0,ta=0,tn=0,tal=0,tp=0;
-            itemsMostrar.forEach((item,i) => {
+            itemsMostrar.forEach((item) => {
                 let tot = item.fob+item.aduana+item.naviera+item.almacen+item.poggi, imp=item.aduana, gas=item.naviera+item.almacen+item.poggi, tgral=item.fob+imp+gas;
                 tf+=item.fob; ta+=item.aduana; tn+=item.naviera; tal+=item.almacen; tp+=item.poggi;
                 let num = items.findIndex(it=>it.id===item.id)+1, d=esAdmin?'':'disabled', c=esAdmin?'':'readonly-input';
@@ -306,56 +357,96 @@
             let gg=tn+tal+tp, gt=tf+ta+gg;
             document.getElementById('kpiFOB').textContent=formatSoles(tf); document.getElementById('kpiImpuestos').textContent=formatSoles(ta);
             document.getElementById('kpiGastos').textContent=formatSoles(gg); document.getElementById('kpiTotal').textContent=formatSoles(gt);
-            guardar();
-        }
-
-        function cambiar(id,c,v) { 
-            if(!esAdmin)return; 
-            let it=items.find(i=>i.id===id); 
-            if(it){
-                it[c]=v;
-                // No llamamos a mostrar() inmediatamente para no perder el foco; solo guardamos y actualizamos totales si es necesario
-                guardar();
-                // Actualizar la fila específica en lugar de re-renderizar todo sería ideal, pero podemos hacer una actualización suave:
-                // Para simplificar, re-renderizamos pero mantenemos el foco? Mejor re-renderizar con mostrar() pero el foco se pierde.
-                // Opción: solo recalcular totales sin re-renderizar toda la tabla.
-                actualizarTotales();
-            }
+            if (tabActual==='kpis') renderKpis();
         }
 
         function actualizarTotales() {
             let itemsMostrar = getFiltrados(), tf=0,ta=0,tn=0,tal=0,tp=0;
-            itemsMostrar.forEach(item => {
-                tf+=item.fob; ta+=item.aduana; tn+=item.naviera; tal+=item.almacen; tp+=item.poggi;
-            });
+            itemsMostrar.forEach(item => { tf+=item.fob; ta+=item.aduana; tn+=item.naviera; tal+=item.almacen; tp+=item.poggi; });
             let gg=tn+tal+tp, gt=tf+ta+gg;
             document.getElementById('kpiFOB').textContent=formatSoles(tf); document.getElementById('kpiImpuestos').textContent=formatSoles(ta);
             document.getElementById('kpiGastos').textContent=formatSoles(gg); document.getElementById('kpiTotal').textContent=formatSoles(gt);
         }
 
-        // Al hacer clic en "Guardar" forzamos un blur para capturar cualquier campo activo
-        function guardarAhora() {
-            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
-                document.activeElement.blur();
+        // ===== Cambios persistidos en Supabase =====
+        async function cambiar(id, campo, valor) {
+            if (!esAdmin) return;
+            let it = items.find(i=>i.id===id);
+            if (!it) return;
+            it[campo] = valor; actualizarTotales();
+            const { error } = await sb.from('contenedores').update({ [campo]: valor }).eq('id', id);
+            if (error) { mostrarToast('⚠️ No se guardó: ' + error.message, 'error'); cargarDesdeServidor(); }
+        }
+
+        async function addRow() {
+            if (!esAdmin) return;
+            let maxOrden = items.length ? Math.max(...items.map(i=>i.orden||0)) : 0;
+            const { data, error } = await sb.from('contenedores')
+                .insert({ cont:'', fecha:'', estado:'En tránsito', fob:0,aduana:0,naviera:0,almacen:0,poggi:0, orden:maxOrden+1 })
+                .select().single();
+            if (error) { mostrarToast('⚠️ No se pudo agregar: ' + error.message, 'error'); return; }
+            items.push(data); mostrar(); llenarSelects();
+            mostrarToast('➕ Contenedor agregado y guardado');
+        }
+
+        async function borrar(id) {
+            if (!esAdmin) return;
+            if (!confirm('¿Eliminar este contenedor?')) return;
+            const { error } = await sb.from('contenedores').delete().eq('id', id);
+            if (error) { mostrarToast('⚠️ No se pudo eliminar: ' + error.message, 'error'); return; }
+            items = items.filter(i=>i.id!==id); mostrar(); llenarSelects();
+            mostrarToast('🗑️ Contenedor eliminado');
+        }
+
+        // ===== CARGA MASIVA desde Excel (se lee en el navegador con SheetJS) =====
+        async function cargaMasiva() {
+            if (!esAdmin) { alert('Solo el administrador puede hacer carga masiva'); return; }
+            const file = document.getElementById('bulkFile').files[0];
+            if (!file) return;
+            const reemplazar = confirm(
+                'CARGA MASIVA\n\nAceptar = REEMPLAZAR todos los contenedores por los del Excel.\nCancelar = AGREGAR los del Excel a los existentes.'
+            );
+            mostrarToast('⏳ Procesando Excel...');
+            try {
+                const buf = await file.arrayBuffer();
+                const wb = XLSX.read(buf, {type:'array'});
+                const wsName = wb.SheetNames.includes('Consolidado') ? 'Consolidado' : wb.SheetNames[0];
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wsName], {header:1, raw:true});
+                // columnas: 1=N°,2=cont,3=fecha,4=estado, (5 vacía),6=fob,7=aduana,8=naviera,9=almacen,10=poggi
+                const num = v => { let n = parseFloat(String(v).replace(/,/g,'')); return isNaN(n)?0:Math.round(n*100)/100; };
+                const fechaStr = v => {
+                    if (v===undefined || v===null || v==='') return '';
+                    if (typeof v === 'number') { let d = XLSX.SSF.parse_date_code(v); return d ? `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}` : ''; }
+                    return String(v);
+                };
+                const ESTADOS = ['En tránsito','En aduana','Liberado','Entregado'];
+                let nuevos = [];
+                for (let r = 3; r < rows.length; r++) {       // datos desde fila 4 (índice 3)
+                    const row = rows[r]; if (!row) continue;
+                    const cont = row[2]; if (cont===undefined || cont===null || cont==='') continue;
+                    let estado = String(row[4]||'').trim(); if (!ESTADOS.includes(estado)) estado='En tránsito';
+                    nuevos.push({ cont:String(cont).trim(), fecha:fechaStr(row[3]), estado,
+                        fob:num(row[6]), aduana:num(row[7]), naviera:num(row[8]), almacen:num(row[9]), poggi:num(row[10]) });
+                }
+                if (!nuevos.length) { mostrarToast('⚠️ No se encontraron contenedores en el Excel', 'error'); return; }
+
+                if (reemplazar) {
+                    const { error: eDel } = await sb.from('contenedores').delete().neq('id', -1);
+                    if (eDel) throw eDel;
+                }
+                let base = (reemplazar || !items.length) ? 0 : Math.max(...items.map(i=>i.orden||0));
+                nuevos = nuevos.map((n,i)=>({...n, orden: base + i + 1}));
+                const { error } = await sb.from('contenedores').insert(nuevos);
+                if (error) throw error;
+                await cargarDesdeServidor();
+                mostrarToast(`✅ Carga masiva: ${nuevos.length} contenedores ${reemplazar?'(reemplazo total)':'(agregados)'}`);
+            } catch (e) {
+                mostrarToast('⚠️ ' + (e.message||e), 'error');
             }
-            guardar();
-            mostrarToast('💾 Todos los cambios guardados');
+            document.getElementById('bulkFile').value = '';
         }
 
-        function addRow() { 
-            if(!esAdmin)return; 
-            let mid=items.length?Math.max(...items.map(i=>i.id)):0; 
-            items.push({id:mid+1,cont:'',fecha:'',estado:'En tránsito',fob:0,aduana:0,naviera:0,almacen:0,poggi:0}); 
-            mostrar();
-            llenarSelects();
-            mostrarToast('➕ Nuevo contenedor agregado. Completa los datos y se guardarán automáticamente.');
-        }
-
-        function borrar(id) { 
-            if(!esAdmin)return; 
-            if(confirm('¿Eliminar?')){items=items.filter(i=>i.id!==id);mostrar();llenarSelects();} 
-        }
-
+        // ===== Filtros =====
         function filtrar() { filtroContenedor=document.getElementById('filterSelect').value; document.getElementById('searchInput').value=''; mostrar(); }
         function buscarManual() { let v=document.getElementById('searchInput').value.trim(); filtroContenedor=v===''?'todos':v; document.getElementById('filterSelect').value='todos'; mostrar(); }
         function filtrarPorEstado(e,b) { filtroEstado=e; document.querySelectorAll('.estado-filtro-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); mostrar(); }
@@ -368,11 +459,31 @@
             items.forEach(i=>{if(i.cont){fs.innerHTML+=`<option value="${i.cont}">${i.cont}</option>`;ds.innerHTML+=`<option value="${i.cont}">${i.cont}</option>`;if(dsv)dsv.innerHTML+=`<option value="${i.cont}">${i.cont}</option>`;}});
         }
 
+        // ===== DOCUMENTOS: Supabase Storage =====
+        async function cargarDocumentos() {
+            documentos = {};
+            // lista las "carpetas" (cada contenedor) dentro del bucket
+            const { data: carpetas, error } = await sb.storage.from(BUCKET).list('', {limit:1000});
+            if (error) return;
+            for (const c of (carpetas||[])) {
+                if (c.id !== null) continue; // los archivos en raíz no nos interesan; carpetas tienen id null
+                const cont = c.name;
+                const { data: archivos } = await sb.storage.from(BUCKET).list(cont, {limit:1000});
+                documentos[cont] = (archivos||[]).map(a => {
+                    const path = `${cont}/${a.name}`;
+                    const { data:{ publicUrl } } = sb.storage.from(BUCKET).getPublicUrl(path);
+                    const ext = a.name.split('.').pop().toLowerCase();
+                    return { nombre:a.name, path, url:publicUrl, tipo: ext==='pdf'?'application/pdf':'image/'+ext,
+                             fecha: a.created_at ? new Date(a.created_at).toLocaleString('es-PE') : '' };
+                });
+            }
+        }
+
         function verDocumentosDirecto(cont) {
             document.getElementById('modalContName').textContent = cont;
             let docs = documentos[cont] || [];
-            document.getElementById('fileList').innerHTML = docs.length === 0 
-                ? '<li style="color:var(--text-soft);padding:15px;text-align:center;">No hay documentos para este contenedor.</li>' 
+            document.getElementById('fileList').innerHTML = docs.length === 0
+                ? '<li style="color:var(--text-soft);padding:15px;text-align:center;">No hay documentos para este contenedor.</li>'
                 : docs.map((d, i) => `
                     <li>
                         <span>${d.tipo.includes('pdf') ? '📄' : '🖼️'} ${d.nombre} <small style="color:var(--text-soft);">(${d.fecha})</small></span>
@@ -383,72 +494,71 @@
                     </li>`).join('');
             document.getElementById('docModal').classList.add('active');
         }
-
         function cerrarModal() { document.getElementById('docModal').classList.remove('active'); }
+
+        // ===== LOGIN con Supabase Auth =====
+        // ===== EMAIL FIJO DEL ADMIN (oculto). Tú solo escribes la contraseña. =====
+        // Pon aquí el email del usuario admin que creaste en Supabase (Authentication > Users).
+        const ADMIN_EMAIL = 'eder.escobedo@strateviaapp.com';
 
         function mostrarLogin() { document.getElementById('loginOverlay').classList.add('active'); document.getElementById('passwordInput').value=''; document.getElementById('loginError').style.display='none'; setTimeout(()=>document.getElementById('passwordInput').focus(),100); }
         function cerrarLogin() { document.getElementById('loginOverlay').classList.remove('active'); }
-        function verificarPassword() { if(document.getElementById('passwordInput').value===ADMIN_PASSWORD){esAdmin=true;document.getElementById('loginOverlay').classList.remove('active');actualizarUI();mostrarToast('✅ Sesión iniciada como Administrador');}else{document.getElementById('loginError').style.display='block';document.getElementById('passwordInput').value='';} }
-        
-        function cerrarSesion() { 
-            // Antes de salir, forzar guardado de cualquier campo activo
-            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
-                document.activeElement.blur();
+        async function verificarPassword() {
+            const password = document.getElementById('passwordInput').value;
+            const { error } = await sb.auth.signInWithPassword({ email: ADMIN_EMAIL, password });
+            if (error) {
+                document.getElementById('loginError').textContent = 'Contraseña incorrecta';
+                document.getElementById('loginError').style.display='block';
+                document.getElementById('passwordInput').value='';
+                return;
             }
-            esAdmin=false; 
-            actualizarUI(); 
-            mostrarToast('👋 Sesión cerrada. Modo espectador.');
+            esAdmin = true;
+            document.getElementById('loginOverlay').classList.remove('active');
+            actualizarUI(); mostrarToast('✅ Sesión iniciada como Administrador');
+        }
+        async function cerrarSesion() {
+            await sb.auth.signOut();
+            esAdmin=false; actualizarUI(); mostrarToast('👋 Sesión cerrada. Modo espectador.');
         }
 
-        function adjuntarDocumento() {
+        // ===== Adjuntar documento a Supabase Storage =====
+        async function adjuntarDocumento() {
             if (!esAdmin) { alert('Solo el administrador puede adjuntar documentos'); return; }
             let cont = document.getElementById('docContainerSelect').value;
             let file = document.getElementById('docFile').files[0];
-            if (!cont) { alert('⚠️ Primero selecciona un contenedor en el menú desplegable'); return; }
+            if (!cont) { alert('⚠️ Primero selecciona un contenedor'); return; }
             if (!file) { alert('⚠️ Selecciona un archivo'); return; }
-            
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                if (!documentos[cont]) documentos[cont] = [];
-                documentos[cont].push({
-                    nombre: file.name,
-                    tipo: file.type,
-                    datos: e.target.result,
-                    fecha: new Date().toLocaleString('es-PE')
-                });
-                guardarDocs();
-                mostrarToast('✅ Documento "' + file.name + '" adjuntado a contenedor ' + cont);
-                document.getElementById('docFile').value = '';
-                mostrar();
-            };
-            reader.readAsDataURL(file);
+            const safe = file.name.replace(/[^\w.\-]/g,'_');
+            const path = `${cont}/${Date.now()}_${safe}`;
+            mostrarToast('⏳ Subiendo documento...');
+            const { error } = await sb.storage.from(BUCKET).upload(path, file, {upsert:false});
+            if (error) { mostrarToast('⚠️ ' + error.message, 'error'); return; }
+            await cargarDocumentos();
+            mostrarToast('✅ Documento "' + file.name + '" adjuntado a ' + cont);
+            document.getElementById('docFile').value = ''; mostrar();
         }
 
         function verDocumentos() { let cont=document.getElementById('docContainerSelect').value; if(!cont){alert('Selecciona contenedor');return;} verDocumentosDirecto(cont); }
         function verDocumentosViewer() { let cont=document.getElementById('docContainerSelectViewer').value; if(!cont){alert('Selecciona contenedor');return;} verDocumentosDirecto(cont); }
-        function verDoc(cont,i) { let doc=documentos[cont][i], w=window.open('','_blank'); w.document.write(doc.tipo.includes('pdf')?`<iframe src="${doc.datos}" width="100%" height="100%"></iframe>`:`<img src="${doc.datos}" style="max-width:100%;">`); }
-        
-        function eliminarDoc(cont, i) {
+        function verDoc(cont,i) { let doc=documentos[cont][i]; window.open(doc.url, '_blank'); }
+
+        async function eliminarDoc(cont, i) {
             if (!esAdmin) return;
-            if (confirm('¿Estás seguro de eliminar este documento?\n\n' + documentos[cont][i].nombre)) {
-                documentos[cont].splice(i, 1);
-                if (!documentos[cont].length) delete documentos[cont];
-                guardarDocs();
-                mostrarToast('🗑️ Documento eliminado');
-                verDocumentosDirecto(cont);
-                mostrar();
-            }
+            const doc = documentos[cont][i];
+            if (!confirm('¿Eliminar este documento?\n\n' + doc.nombre)) return;
+            const { error } = await sb.storage.from(BUCKET).remove([doc.path]);
+            if (error) { mostrarToast('⚠️ ' + error.message, 'error'); return; }
+            await cargarDocumentos(); mostrarToast('🗑️ Documento eliminado'); verDocumentosDirecto(cont); mostrar();
         }
 
         function descargarDocumentos() { let cont=document.getElementById('docContainerSelect').value; if(!cont){alert('Selecciona contenedor');return;} descargarDocsCont(cont); }
         function descargarDocumentosViewer() { let cont=document.getElementById('docContainerSelectViewer').value; if(!cont){alert('Selecciona contenedor');return;} descargarDocsCont(cont); }
-        function descargarDocsCont(cont) { let docs=documentos[cont]||[]; if(!docs.length){alert('No hay documentos');return;} docs.forEach(d=>{let a=document.createElement('a');a.href=d.datos;a.download=`${cont}_${d.nombre}`;a.click();}); }
+        function descargarDocsCont(cont) { let docs=documentos[cont]||[]; if(!docs.length){alert('No hay documentos');return;} docs.forEach(d=>{let a=document.createElement('a');a.href=d.url;a.download=d.nombre;a.target='_blank';a.click();}); }
 
         function mostrarToast(msg, tipo) {
             let t = document.createElement('div');
             t.className = 'toast' + (tipo === 'error' ? ' error' : '');
-            t.textContent = msg;
-            document.body.appendChild(t);
+            t.textContent = msg; document.body.appendChild(t);
             setTimeout(() => t.remove(), 3000);
         }
 
@@ -500,14 +610,101 @@
             doc.save(`dashboard_${new Date().toISOString().split('T')[0]}.pdf`);
         }
 
-        function aplicarTheme(t) { theme=t; localStorage.setItem('dashboard-theme',t); document.documentElement.setAttribute('data-theme',t); document.getElementById('themeLabel').textContent=THEMES[t]; }
+        function aplicarTheme(t) { theme=t; localStorage.setItem('dashboard-theme',t); document.documentElement.setAttribute('data-theme',t); document.getElementById('themeLabel').textContent=THEMES[t]; if(tabActual==='kpis') renderKpis(); }
+
+        // ===== PESTAÑAS: Registro / Dashboard KPIs =====
+        let tabActual = 'tabla';
+        let charts = {};
+        function cambiarTab(t) {
+            tabActual = t;
+            document.getElementById('panelTabla').classList.toggle('active', t==='tabla');
+            document.getElementById('panelKpis').classList.toggle('active', t==='kpis');
+            document.getElementById('tabBtnTabla').classList.toggle('active', t==='tabla');
+            document.getElementById('tabBtnKpis').classList.toggle('active', t==='kpis');
+            if (t==='kpis') renderKpis();
+        }
+
+        function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+        function renderKpis() {
+            // Totales
+            let tf=0,ta=0,tn=0,tal=0,tp=0;
+            const cnt = {'En tránsito':0,'En aduana':0,'Liberado':0,'Entregado':0};
+            items.forEach(i=>{ tf+=i.fob; ta+=i.aduana; tn+=i.naviera; tal+=i.almacen; tp+=i.poggi; if(cnt[i.estado]!==undefined) cnt[i.estado]++; });
+            const gastos = tn+tal+tp, total = tf+ta+gastos;
+            document.getElementById('k2FOB').textContent = formatSoles(tf);
+            document.getElementById('k2Imp').textContent = formatSoles(ta);
+            document.getElementById('k2Gas').textContent = formatSoles(gastos);
+            document.getElementById('k2Tot').textContent = formatSoles(total);
+            document.getElementById('stTransito').textContent = cnt['En tránsito'];
+            document.getElementById('stAduana').textContent = cnt['En aduana'];
+            document.getElementById('stLiberado').textContent = cnt['Liberado'];
+            document.getElementById('stEntregado').textContent = cnt['Entregado'];
+
+            const txt = cssVar('--text'), soft = cssVar('--text-soft'), grid = cssVar('--border');
+            Chart.defaults.color = soft; Chart.defaults.font.family = "-apple-system,Segoe UI,Roboto,sans-serif";
+            const money = v => 'S/ ' + Number(v).toLocaleString('en-US',{maximumFractionDigits:0});
+            Object.values(charts).forEach(c=>{ try{c.destroy();}catch(e){} });
+
+            // 1) Dona: distribución del costo total
+            charts.costos = new Chart(document.getElementById('chartCostos'), {
+                type:'doughnut',
+                data:{ labels:['FOB','Impuestos (Aduana)','Naviera','Almacén','Poggi'],
+                    datasets:[{ data:[tf,ta,tn,tal,tp],
+                        backgroundColor:['#6366f1','#f97316','#0ea5e9','#eab308','#10b981'], borderWidth:2, borderColor:cssVar('--panel') }] },
+                options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+                    plugins:{ legend:{position:'bottom',labels:{padding:14,usePointStyle:true}},
+                        tooltip:{callbacks:{label:c=>` ${c.label}: ${money(c.raw)}`}} } }
+            });
+
+            // 2) Barra: contenedores por estado
+            charts.estados = new Chart(document.getElementById('chartEstados'), {
+                type:'bar',
+                data:{ labels:['En tránsito','En aduana','Liberado','Entregado'],
+                    datasets:[{ label:'Contenedores', data:[cnt['En tránsito'],cnt['En aduana'],cnt['Liberado'],cnt['Entregado']],
+                        backgroundColor:['#64748b','#f97316','#eab308','#10b981'], borderRadius:8, maxBarThickness:70 }] },
+                options:{ responsive:true, maintainAspectRatio:false,
+                    plugins:{ legend:{display:false} },
+                    scales:{ y:{beginAtZero:true,ticks:{precision:0},grid:{color:grid}}, x:{grid:{display:false}} } }
+            });
+
+            // 3) Barras apiladas: costo por contenedor (todos, en orden)
+            const ord = [...items].sort((a,b)=>(a.orden||0)-(b.orden||0));
+            charts.porCont = new Chart(document.getElementById('chartPorContenedor'), {
+                type:'bar',
+                data:{ labels:ord.map(i=>i.cont),
+                    datasets:[
+                        {label:'FOB',data:ord.map(i=>i.fob),backgroundColor:'#6366f1'},
+                        {label:'Aduana',data:ord.map(i=>i.aduana),backgroundColor:'#f97316'},
+                        {label:'Naviera',data:ord.map(i=>i.naviera),backgroundColor:'#0ea5e9'},
+                        {label:'Almacén',data:ord.map(i=>i.almacen),backgroundColor:'#eab308'},
+                        {label:'Poggi',data:ord.map(i=>i.poggi),backgroundColor:'#10b981'} ] },
+                options:{ responsive:true, maintainAspectRatio:false,
+                    plugins:{ legend:{position:'bottom',labels:{usePointStyle:true,padding:12}},
+                        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${money(c.raw)}`}} },
+                    scales:{ x:{stacked:true,grid:{display:false},ticks:{maxRotation:90,minRotation:45,font:{size:9}}},
+                             y:{stacked:true,beginAtZero:true,grid:{color:grid},ticks:{callback:v=>'S/ '+(v/1000)+'k'}} } }
+            });
+
+            // 4) Barra horizontal: top 10 más costosos
+            const top = [...items].map(i=>({cont:i.cont, total:i.fob+i.aduana+i.naviera+i.almacen+i.poggi}))
+                .sort((a,b)=>b.total-a.total).slice(0,10).reverse();
+            charts.top = new Chart(document.getElementById('chartTop'), {
+                type:'bar',
+                data:{ labels:top.map(t=>'Cont. '+t.cont),
+                    datasets:[{ label:'Costo total', data:top.map(t=>t.total),
+                        backgroundColor:'#6366f1', borderRadius:6 }] },
+                options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+                    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>' '+money(c.raw)}} },
+                    scales:{ x:{beginAtZero:true,grid:{color:grid},ticks:{callback:v=>'S/ '+(v/1000)+'k'}}, y:{grid:{display:false}} } }
+            });
+        }
 
         // Eventos
         document.getElementById('themeToggle').addEventListener('click',(e)=>{e.stopPropagation();document.getElementById('themeMenu').classList.toggle('hidden');});
         document.addEventListener('click',(e)=>{if(!e.target.closest('.theme-picker'))document.getElementById('themeMenu').classList.add('hidden');});
         document.querySelectorAll('.theme-option').forEach(b=>{b.addEventListener('click',()=>{aplicarTheme(b.dataset.theme);document.getElementById('themeMenu').classList.add('hidden');});});
         document.getElementById('docModal').addEventListener('click',function(e){if(e.target===this)cerrarModal();});
-        
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 if (document.getElementById('docModal').classList.contains('active')) cerrarModal();
@@ -515,10 +712,14 @@
             }
         });
 
-        // Botón Guardar agregado en el HTML (adminButtons)
-        // Ya está incluido en el HTML de abajo.
-
-        aplicarTheme(theme); actualizarUI();
+        // ===== Arranque: reanuda sesión si existe y carga datos =====
+        (async function init(){
+            aplicarTheme(theme);
+            const { data:{ session } } = await sb.auth.getSession();
+            esAdmin = !!session;
+            actualizarUI();
+            await cargarDesdeServidor();
+        })();
     </script>
 </body>
 </html>
