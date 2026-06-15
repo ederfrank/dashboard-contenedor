@@ -158,8 +158,8 @@
 
     <header class="topbar">
         <div class="brand">
-            <h1>🚢 Dashboard de Contenedores - Check Azul - en Soles</h1>
-            <span class="sub">Check Azul · FOB · Aduana · Naviera · Almacén · Poggi</span>
+            <h1 id="tituloDashboard">🚢 Dashboard de Contenedores - Check Azul - en Soles</h1>
+            <span class="sub" id="subtituloDashboard">Check Azul · FOB · Aduana · Naviera · Almacén · Poggi</span>
         </div>
         <div class="header-right">
             <div class="empresa-picker">
@@ -322,6 +322,19 @@
             if (!empresas.find(e=>e.id===empresaActual)) empresaActual = empresas[0].id;
             const sel = document.getElementById('empresaSelect');
             sel.innerHTML = empresas.map(e=>`<option value="${e.id}" ${e.id===empresaActual?'selected':''}>🏢 ${e.nombre}</option>`).join('');
+            actualizarTitulo();
+        }
+
+        // Actualiza el título grande y la pestaña del navegador según la empresa activa.
+        // (Solo cambia texto en pantalla; NO toca ningún dato.)
+        function actualizarTitulo() {
+            const nom = nombreEmpresa();
+            const t = '🚢 Dashboard de Contenedores - ' + nom + ' - en Soles';
+            const el = document.getElementById('tituloDashboard');
+            if (el) el.textContent = t;
+            const sub = document.getElementById('subtituloDashboard');
+            if (sub) sub.textContent = nom + ' · FOB · Aduana · Naviera · Almacén · Poggi';
+            document.title = 'Dashboard de Contenedores - ' + nom + ' - en Soles';
         }
 
         function cambiarEmpresa(id) {
@@ -329,6 +342,7 @@
             localStorage.setItem('empresa_actual', id);
             // limpiar filtros al cambiar de empresa
             filtroContenedor='todos'; filtroEstado='todos';
+            actualizarTitulo();
             cargarDesdeServidor();
             mostrarToast('🏢 Empresa: ' + (empresas.find(e=>e.id===id)?.nombre||id));
         }
@@ -542,7 +556,7 @@
         // ===== LOGIN con Supabase Auth =====
         // ===== EMAIL FIJO DEL ADMIN (oculto). Tú solo escribes la contraseña. =====
         // Pon aquí el email del usuario admin que creaste en Supabase (Authentication > Users).
-        const ADMIN_EMAIL = 'eder.escobedo@strateviaapp.com';
+        const ADMIN_EMAIL = 'admin@intelliflow.com';
 
         function mostrarLogin() { document.getElementById('loginOverlay').classList.add('active'); document.getElementById('passwordInput').value=''; document.getElementById('loginError').style.display='none'; setTimeout(()=>document.getElementById('passwordInput').focus(),100); }
         function cerrarLogin() { document.getElementById('loginOverlay').classList.remove('active'); }
@@ -625,7 +639,7 @@
             let pageW = doc.internal.pageSize.getWidth();
             doc.setFillColor(79,70,229); doc.rect(0,0,pageW,15,'F');
             doc.setTextColor(255,255,255); doc.setFontSize(14); doc.setFont('helvetica','bold');
-            doc.text('Dashboard de Contenedores - Check Azul - en Soles', 10, 10);
+            doc.text('Dashboard de Contenedores - ' + nombreEmpresa() + ' - en Soles', 10, 10);
             let tf=0,ta=0,tn=0,tal=0,tp=0;
             itemsExport.forEach(i=>{tf+=i.fob;ta+=i.aduana;tn+=i.naviera;tal+=i.almacen;tp+=i.poggi;});
             let gg=tn+tal+tp, gt=tf+ta+gg;
