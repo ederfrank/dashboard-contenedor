@@ -22,6 +22,9 @@
         .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:30;gap:16px;flex-wrap:wrap}
         .brand h1{margin:0;font-size:18px}.brand .sub{font-size:11px;color:var(--text-soft)}
         .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+        .empresa-picker{display:flex;flex-direction:column;gap:2px}
+        .empresa-picker label{font-size:9px;text-transform:uppercase;color:var(--text-soft);letter-spacing:.5px;font-weight:700}
+        .empresa-picker select{background:var(--panel-2);border:2px solid var(--accent);color:var(--text);padding:7px 12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
         .login-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-weight:600;font-size:12px}
         .login-btn:hover{background:var(--accent-hover)}
         .logout-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--danger);background:var(--danger);color:#fff;cursor:pointer;font-weight:600;font-size:12px}
@@ -159,6 +162,10 @@
             <span class="sub">Check Azul · FOB · Aduana · Naviera · Almacén · Poggi</span>
         </div>
         <div class="header-right">
+            <div class="empresa-picker">
+                <label>Empresa</label>
+                <select id="empresaSelect" onchange="cambiarEmpresa(this.value)"></select>
+            </div>
             <span id="userBadge" style="display:none;" class="user-badge">🔒 Admin</span>
             <button id="btnLogin" class="login-btn" onclick="mostrarLogin()">🔑 Ingresar</button>
             <button id="btnLogout" class="logout-btn" style="display:none;" onclick="cerrarSesion()">Salir</button>
@@ -300,13 +307,42 @@
         let documentos = {};            // { cont: [ {nombre, path, url, tipo, fecha} ] }
         let filtroContenedor = 'todos', filtroEstado = 'todos', theme = localStorage.getItem('dashboard-theme') || 'light';
 
+        // ===== MULTIEMPRESA =====
+        let empresas = [];                 // catálogo desde la tabla 'empresas'
+        let empresaActual = localStorage.getItem('empresa_actual') || 'check_azul';
+
+        async function cargarEmpresas() {
+            const { data, error } = await sb.from('empresas').select('*').eq('activo', true).order('orden');
+            if (error || !data || !data.length) {
+                // Si aún no corriste el SQL de migración, opera solo con Check Azul.
+                empresas = [{id:'check_azul', nombre:'Check Azul', color:'#4f46e5'}];
+            } else {
+                empresas = data;
+            }
+            if (!empresas.find(e=>e.id===empresaActual)) empresaActual = empresas[0].id;
+            const sel = document.getElementById('empresaSelect');
+            sel.innerHTML = empresas.map(e=>`<option value="${e.id}" ${e.id===empresaActual?'selected':''}>🏢 ${e.nombre}</option>`).join('');
+        }
+
+        function cambiarEmpresa(id) {
+            empresaActual = id;
+            localStorage.setItem('empresa_actual', id);
+            // limpiar filtros al cambiar de empresa
+            filtroContenedor='todos'; filtroEstado='todos';
+            cargarDesdeServidor();
+            mostrarToast('🏢 Empresa: ' + (empresas.find(e=>e.id===id)?.nombre||id));
+        }
+        function nombreEmpresa() { return empresas.find(e=>e.id===empresaActual)?.nombre || empresaActual; }
+
         function formatNumber(v) { return Number(v||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
         function formatSoles(v) { return 'S/ ' + formatNumber(v); }
         function getDotClass(e) { return e==='En tránsito'?'dot-transito':e==='En aduana'?'dot-aduana':e==='Liberado'?'dot-liberado':e==='Entregado'?'dot-entregado':''; }
 
-        // ===== DATOS: leer de Supabase =====
+        // ===== DATOS: leer de Supabase (SOLO la empresa activa) =====
         async function cargarDesdeServidor() {
-            const { data, error } = await sb.from('contenedores').select('*').order('orden', {ascending:true}).order('id', {ascending:true});
+            const { data, error } = await sb.from('contenedores').select('*')
+                .eq('empresa_id', empresaActual)
+                .order('orden', {ascending:true}).order('id', {ascending:true});
             if (error) { mostrarToast('⚠️ Error al leer datos: ' + error.message, 'error'); return; }
             items = data || [];
             await cargarDocumentos();
@@ -382,7 +418,7 @@
             if (!esAdmin) return;
             let maxOrden = items.length ? Math.max(...items.map(i=>i.orden||0)) : 0;
             const { data, error } = await sb.from('contenedores')
-                .insert({ cont:'', fecha:'', estado:'En tránsito', fob:0,aduana:0,naviera:0,almacen:0,poggi:0, orden:maxOrden+1 })
+                .insert({ cont:'', fecha:'', estado:'En tránsito', fob:0,aduana:0,naviera:0,almacen:0,poggi:0, orden:maxOrden+1, empresa_id: empresaActual })
                 .select().single();
             if (error) { mostrarToast('⚠️ No se pudo agregar: ' + error.message, 'error'); return; }
             items.push(data); mostrar(); llenarSelects();
@@ -431,15 +467,17 @@
                 if (!nuevos.length) { mostrarToast('⚠️ No se encontraron contenedores en el Excel', 'error'); return; }
 
                 if (reemplazar) {
-                    const { error: eDel } = await sb.from('contenedores').delete().neq('id', -1);
+                    // IMPORTANTE: solo borra los contenedores de la empresa ACTIVA.
+                    // Las demás empresas (ej. Check Azul) quedan intactas.
+                    const { error: eDel } = await sb.from('contenedores').delete().eq('empresa_id', empresaActual);
                     if (eDel) throw eDel;
                 }
                 let base = (reemplazar || !items.length) ? 0 : Math.max(...items.map(i=>i.orden||0));
-                nuevos = nuevos.map((n,i)=>({...n, orden: base + i + 1}));
+                nuevos = nuevos.map((n,i)=>({...n, orden: base + i + 1, empresa_id: empresaActual}));
                 const { error } = await sb.from('contenedores').insert(nuevos);
                 if (error) throw error;
                 await cargarDesdeServidor();
-                mostrarToast(`✅ Carga masiva: ${nuevos.length} contenedores ${reemplazar?'(reemplazo total)':'(agregados)'}`);
+                mostrarToast(`✅ ${nombreEmpresa()}: ${nuevos.length} contenedores ${reemplazar?'(reemplazo)':'(agregados)'}`);
             } catch (e) {
                 mostrarToast('⚠️ ' + (e.message||e), 'error');
             }
@@ -459,18 +497,23 @@
             items.forEach(i=>{if(i.cont){fs.innerHTML+=`<option value="${i.cont}">${i.cont}</option>`;ds.innerHTML+=`<option value="${i.cont}">${i.cont}</option>`;if(dsv)dsv.innerHTML+=`<option value="${i.cont}">${i.cont}</option>`;}});
         }
 
-        // ===== DOCUMENTOS: Supabase Storage =====
+        // ===== DOCUMENTOS: Supabase Storage (separados por empresa) =====
+        // Check Azul mantiene su ruta histórica:  contenedor/archivo
+        // Empresas nuevas usan ruta con prefijo:  empresa_id/contenedor/archivo
+        // Así NO se tocan los PDFs ya cargados de Check Azul.
+        function prefijoEmpresa() { return empresaActual === 'check_azul' ? '' : empresaActual + '/'; }
+
         async function cargarDocumentos() {
             documentos = {};
-            // lista las "carpetas" (cada contenedor) dentro del bucket
-            const { data: carpetas, error } = await sb.storage.from(BUCKET).list('', {limit:1000});
+            const base = prefijoEmpresa();   // '' para Check Azul, 'vivibox/' para otras
+            const { data: carpetas, error } = await sb.storage.from(BUCKET).list(base || '', {limit:1000});
             if (error) return;
             for (const c of (carpetas||[])) {
-                if (c.id !== null) continue; // los archivos en raíz no nos interesan; carpetas tienen id null
+                if (c.id !== null) continue; // solo carpetas (cada contenedor)
                 const cont = c.name;
-                const { data: archivos } = await sb.storage.from(BUCKET).list(cont, {limit:1000});
+                const { data: archivos } = await sb.storage.from(BUCKET).list(base + cont, {limit:1000});
                 documentos[cont] = (archivos||[]).map(a => {
-                    const path = `${cont}/${a.name}`;
+                    const path = `${base}${cont}/${a.name}`;
                     const { data:{ publicUrl } } = sb.storage.from(BUCKET).getPublicUrl(path);
                     const ext = a.name.split('.').pop().toLowerCase();
                     return { nombre:a.name, path, url:publicUrl, tipo: ext==='pdf'?'application/pdf':'image/'+ext,
@@ -529,7 +572,7 @@
             if (!cont) { alert('⚠️ Primero selecciona un contenedor'); return; }
             if (!file) { alert('⚠️ Selecciona un archivo'); return; }
             const safe = file.name.replace(/[^\w.\-]/g,'_');
-            const path = `${cont}/${Date.now()}_${safe}`;
+            const path = `${prefijoEmpresa()}${cont}/${Date.now()}_${safe}`;
             mostrarToast('⏳ Subiendo documento...');
             const { error } = await sb.storage.from(BUCKET).upload(path, file, {upsert:false});
             if (error) { mostrarToast('⚠️ ' + error.message, 'error'); return; }
@@ -717,6 +760,7 @@
             aplicarTheme(theme);
             const { data:{ session } } = await sb.auth.getSession();
             esAdmin = !!session;
+            await cargarEmpresas();
             actualizarUI();
             await cargarDesdeServidor();
         })();
